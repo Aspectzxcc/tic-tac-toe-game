@@ -27,6 +27,7 @@ export default function registerSocketHandlers(io: Server) {
       const { roomId, move } = data as { roomId: string; move: any };
       socket.to(roomId).emit('game:move', move);
       console.log(`${socket.id} made move in room ${roomId}`);
+      console.log("Move data:", move);
     });
 
     socket.on('disconnect', () => {

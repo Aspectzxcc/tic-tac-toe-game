@@ -1,13 +1,151 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Socket.IO chat</title>
+    <title>Gateway Service Tester</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 2rem; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1, h2 { color: #1a1a1a; }
+        .status { background-color: #e0e0e0; padding: 0.5rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        .status .disconnected { color: #d32f2f; font-weight: bold; }
+        .status .connected { color: #388e3c; font-weight: bold; }
+        .section { margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1.5rem; }
+        input[type="text"] { width: 200px; padding: 8px; margin-right: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 16px; border: none; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #game-controls { display: none; }
+        #log { margin-top: 1.5rem; background-color: #2d2d2d; color: #f0f0f0; padding: 1rem; border-radius: 4px; height: 200px; overflow-y: scroll; font-family: "Courier New", Courier, monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gateway Service Test UI</h1>
+
+        <div class="status">
+            <strong>Status:</strong> <span id="connection-status" class="disconnected">Disconnected</span>
+            <br>
+            <strong>Socket ID:</strong> <span id="socket-id">N/A</span>
+        </div>
+
+        <div class="section">
+            <h2>Room Management</h2>
+            <button id="create-room-btn">Create Room</button>
+            <hr style="margin: 1rem 0; border: none; border-top: 1px dashed #ccc;">
+            <input type="text" id="room-id-input" placeholder="Enter Room ID">
+            <button id="join-room-btn">Join Room</button>
+            <p><strong>Current Room:</strong> <span id="current-room">None</span></p>
+        </div>
+
+        <div class="section" id="game-controls">
+            <h2>Game Controls</h2>
+            <input type="text" id="move-input" placeholder="Enter move data (e.g., 5)">
+            <button id="send-move-btn">Send Move</button>
+        </div>
+
+        <div class="section">
+            <h2>Event Log</h2>
+            <div id="log"></div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      const socket = io();
+        const socket = io();
+
+        // --- DOM Elements ---
+        const statusEl = document.getElementById('connection-status');
+        const socketIdEl = document.getElementById('socket-id');
+        const logEl = document.getElementById('log');
+        const createRoomBtn = document.getElementById('create-room-btn');
+        const joinRoomBtn = document.getElementById('join-room-btn');
+        const roomIdInput = document.getElementById('room-id-input');
+        const currentRoomEl = document.getElementById('current-room');
+        const gameControlsEl = document.getElementById('game-controls');
+        const moveInput = document.getElementById('move-input');
+        const sendMoveBtn = document.getElementById('send-move-btn');
+
+        let currentRoomId = null;
+
+        // --- Utility ---
+        function log(message) {
+            const time = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${time}] ${message}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // --- Socket Event Listeners ---
+        socket.on('connect', () => {
+            statusEl.textContent = 'Connected';
+            statusEl.className = 'connected';
+            socketIdEl.textContent = socket.id;
+            log(`✅ Connected to server with ID: ${socket.id}`);
+        });
+
+        socket.on('disconnect', () => {
+            statusEl.textContent = 'Disconnected';
+            statusEl.className = 'disconnected';
+            socketIdEl.textContent = 'N/A';
+            log(`❌ Disconnected from server.`);
+            gameControlsEl.style.display = 'none';
+        });
+
+        socket.on('room:ready', () => {
+            log('🚀 Room is ready! Two players have joined. Game can begin.');
+            gameControlsEl.style.display = 'block';
+        });
+
+        socket.on('game:move', (move) => {
+            log(`📥 Received move from opponent: ${JSON.stringify(move)}`);
+        });
+
+        // --- DOM Event Handlers ---
+        createRoomBtn.addEventListener('click', () => {
+            log('-> Emitting "room:create"...');
+            socket.emit('room:create', (roomId) => {
+                log(`<- Server responded with new room ID: ${roomId}`);
+                currentRoomId = roomId;
+                currentRoomEl.textContent = roomId;
+                roomIdInput.value = roomId;
+            });
+        });
+
+        joinRoomBtn.addEventListener('click', () => {
+            const roomIdToJoin = roomIdInput.value;
+            if (!roomIdToJoin) {
+                alert('Please enter a Room ID.');
+                return;
+            }
+            log(`-> Emitting "room:join" for room: ${roomIdToJoin}...`);
+            socket.emit('room:join', roomIdToJoin, (response) => {
+                if (response.success) {
+                    log(`✅ Successfully joined room: ${roomIdToJoin}`);
+                    currentRoomId = roomIdToJoin;
+                    currentRoomEl.textContent = roomIdToJoin;
+                } else {
+                    log(`🛑 Failed to join room: ${response.message}`);
+                    alert(`Failed to join room: ${response.message}`);
+                }
+            });
+        });
+
+        sendMoveBtn.addEventListener('click', () => {
+            const moveData = moveInput.value;
+            if (!currentRoomId) {
+                alert('You must be in a room to send a move.');
+                return;
+            }
+            if (!moveData) {
+                alert('Please enter some move data.');
+                return;
+            }
+
+            const payload = { roomId: currentRoomId, move: moveData };
+            log(`-> Emitting "game:move": ${JSON.stringify(payload)}`);
+            socket.emit('game:move', payload);
+            moveInput.value = '';
+        });
     </script>
-  </head>
-  <body>
-  </body>
+</body>
 </html>
