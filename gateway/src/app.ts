@@ -1,12 +1,17 @@
 import express from 'express';
+import { createServer } from 'node:http';
+import { Server } from 'socket.io';
 
 const app = express();
-
-app.use(express.json());
+const server = createServer(app);
+const io = new Server(server);
 
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Welcome to the Quantum Tic-Tac-Toe Gateway!' });
+  res.send('<h1>Hello world</h1>');
 });
 
+io.on('connection', (socket) => {
+  console.log('a user connected');
+});
 
-export default app;
+export default server;d
