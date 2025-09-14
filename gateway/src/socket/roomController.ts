@@ -1,13 +1,15 @@
-import { Socket } from "socket.io";
+import { Socket, Server } from "socket.io";
+import { RoomStore } from "./roomStore.js";
 
-export function createRoom(socket: Socket, callback: (roomId: string) => void) {
+export function createRoom(roomStore: RoomStore, socket: Socket, callback: (roomId: string) => void) {
   const roomId = Math.random().toString(36).substring(2, 8);
+  roomStore.createRoom(roomId, socket.id);
   socket.join(roomId);
   callback(roomId);
   console.log(`${socket.id} created room ${roomId}`);
 }
 
-export function joinRoom(io: any, socket: Socket, roomId: string, callback: (response: { success: boolean; message?: string }) => void) {
+export function joinRoom(io: Server, socket: Socket, roomStore: RoomStore, roomId: string, callback: (response: { success: boolean; message?: string }) => void) {
   const room = io.sockets.adapter.rooms.get(roomId);
   if (socket.rooms.has(roomId)) {
     callback({ success: true });
@@ -15,6 +17,7 @@ export function joinRoom(io: any, socket: Socket, roomId: string, callback: (res
   }
 
   if (room && room.size < 2) {
+    roomStore.joinRoom(roomId, socket.id);
     socket.join(roomId);
     callback({ success: true });
     console.log(`${socket.id} joined room ${roomId}`);
