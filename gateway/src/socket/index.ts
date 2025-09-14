@@ -1,8 +1,5 @@
 import { Server, Socket } from 'socket.io';
 import { createRoom, joinRoom } from './roomController.ts';
-import { RoomStore } from './roomStore.ts';
-
-const roomStore = new RoomStore();
 
 export default function registerSocketHandlers(io: Server) {
   io.on('connection', (socket: Socket) => {
@@ -10,11 +7,11 @@ export default function registerSocketHandlers(io: Server) {
 
     // create room
     socket.on('room:create', (callback) => {
-      createRoom(roomStore, socket, callback);
+      createRoom(socket, callback);
     });
 
     socket.on('room:join', (roomId: string, callback) => {
-      joinRoom(io, socket, roomStore, roomId, callback);
+      joinRoom(io, socket, roomId, callback);
     });
 
     socket.on('game:move', (data) => {
