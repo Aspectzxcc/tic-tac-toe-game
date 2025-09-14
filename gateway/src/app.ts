@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { join } from 'node:path';
+import registerSocketHandlers from './socket.ts';
 
 const app = express();
 const server = createServer(app);
@@ -11,12 +12,6 @@ app.get('/', (req, res) => {
   res.sendFile(join(process.cwd(), 'index.html'));
 });
 
-io.on('connection', (socket) => {
-  console.log(socket.id, 'connected');
-});
-
-io.on('disconnect', (socket) => {
-  console.log(socket.id, 'disconnected');
-});
+registerSocketHandlers(io);
 
 export default server;
