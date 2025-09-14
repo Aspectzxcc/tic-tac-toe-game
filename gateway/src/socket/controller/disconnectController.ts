@@ -1,5 +1,5 @@
 import { Socket, Server } from "socket.io";
-import { roomStore } from "../roomStore";
+import { roomStore } from "../roomStore.js";
 
 export function handleDisconnect(io: Server, socket: Socket) {
   console.log(`${socket.id} disconnected`);

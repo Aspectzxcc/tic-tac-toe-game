@@ -1,11 +1,13 @@
 import { Server, Socket } from 'socket.io';
-import { createRoom, joinRoom } from './controller/roomController.ts';
-import { handleDisconnect } from './controller/disconnectController.ts';
-import { handleGameMove } from './controller/gameController.ts';
+import { createRoom, joinRoom } from './controller/roomController.js';
+import { handleDisconnect } from './controller/disconnectController.js';
+import { handleGameMove } from './controller/gameController.js';
+import { auth } from './middleware/auth.js';
 
 export default function registerSocketHandlers(io: Server) {
+  io.use(auth);
   io.on('connection', (socket: Socket) => {
-    console.log(`${socket.id} connected`);
+    console.log(`${socket.data.user.username} connected`);
 
     socket.on('room:create', (callback) => createRoom(socket, callback));
     socket.on('room:join', (roomId: string, callback) => joinRoom(io, socket, roomId, callback));

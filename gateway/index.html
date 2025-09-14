@@ -15,7 +15,7 @@
         button { padding: 8px 16px; border: none; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer; }
         button:hover { background-color: #0056b3; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
-        #game-controls { display: none; }
+        .hidden { display: none; }
         #log { margin-top: 1.5rem; background-color: #2d2d2d; color: #f0f0f0; padding: 1rem; border-radius: 4px; height: 200px; overflow-y: scroll; font-family: "Courier New", Courier, monospace; white-space: pre-wrap; }
     </style>
 </head>
@@ -29,19 +29,27 @@
             <strong>Socket ID:</strong> <span id="socket-id">N/A</span>
         </div>
 
-        <div class="section">
-            <h2>Room Management</h2>
-            <button id="create-room-btn">Create Room</button>
-            <hr style="margin: 1rem 0; border: none; border-top: 1px dashed #ccc;">
-            <input type="text" id="room-id-input" placeholder="Enter Room ID">
-            <button id="join-room-btn">Join Room</button>
-            <p><strong>Current Room:</strong> <span id="current-room">None</span></p>
+        <div class="section" id="auth-section">
+            <h2>Authentication</h2>
+            <input type="text" id="jwt-input" value="mock-jwt-for-testing">
+            <button id="connect-btn">Connect</button>
         </div>
 
-        <div class="section" id="game-controls">
-            <h2>Game Controls</h2>
-            <input type="text" id="move-input" placeholder="Enter move data (e.g., 5)">
-            <button id="send-move-btn">Send Move</button>
+        <div id="main-content" class="hidden">
+            <div class="section">
+                <h2>Room Management</h2>
+                <button id="create-room-btn">Create Room</button>
+                <hr style="margin: 1rem 0; border: none; border-top: 1px dashed #ccc;">
+                <input type="text" id="room-id-input" placeholder="Enter Room ID">
+                <button id="join-room-btn">Join Room</button>
+                <p><strong>Current Room:</strong> <span id="current-room">None</span></p>
+            </div>
+
+            <div class="section hidden" id="game-controls">
+                <h2>Game Controls</h2>
+                <input type="text" id="move-input" placeholder="Enter move data (e.g., 5)">
+                <button id="send-move-btn">Send Move</button>
+            </div>
         </div>
 
         <div class="section">
@@ -52,8 +60,6 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
-
         // --- DOM Elements ---
         const statusEl = document.getElementById('connection-status');
         const socketIdEl = document.getElementById('socket-id');
@@ -65,42 +71,74 @@
         const gameControlsEl = document.getElementById('game-controls');
         const moveInput = document.getElementById('move-input');
         const sendMoveBtn = document.getElementById('send-move-btn');
+        const jwtInput = document.getElementById('jwt-input');
+        const connectBtn = document.getElementById('connect-btn');
+        const authSection = document.getElementById('auth-section');
+        const mainContent = document.getElementById('main-content');
 
+        let socket;
         let currentRoomId = null;
 
-        // --- Utility ---
         function log(message) {
             const time = new Date().toLocaleTimeString();
             logEl.innerHTML += `[${time}] ${message}\n`;
             logEl.scrollTop = logEl.scrollHeight;
         }
 
-        // --- Socket Event Listeners ---
-        socket.on('connect', () => {
-            statusEl.textContent = 'Connected';
-            statusEl.className = 'connected';
-            socketIdEl.textContent = socket.id;
-            log(`✅ Connected to server with ID: ${socket.id}`);
+        connectBtn.addEventListener('click', () => {
+            if (socket) socket.disconnect();
+            
+            const token = jwtInput.value;
+            if (!token) return alert('Token is required.');
+
+            socket = io({
+                auth: { token }
+            });
+
+            setupSocketListeners();
         });
 
-        socket.on('disconnect', () => {
-            statusEl.textContent = 'Disconnected';
-            statusEl.className = 'disconnected';
-            socketIdEl.textContent = 'N/A';
-            log(`❌ Disconnected from server.`);
-            gameControlsEl.style.display = 'none';
-        });
+        function setupSocketListeners() {
+            socket.on('connect', () => {
+                statusEl.textContent = 'Connected';
+                statusEl.className = 'connected';
+                socketIdEl.textContent = socket.id;
+                authSection.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                log(`✅ Connected to server with ID: ${socket.id}`);
+            });
 
-        socket.on('room:ready', () => {
-            log('🚀 Room is ready! Two players have joined. Game can begin.');
-            gameControlsEl.style.display = 'block';
-        });
+            socket.on('connect_error', (err) => {
+                log(`🛑 Connection failed: ${err.message}`);
+                alert(`Connection Failed: ${err.message}`);
+            });
 
-        socket.on('game:move', (move) => {
-            log(`📥 Received move from opponent: ${JSON.stringify(move)}`);
-        });
+            socket.on('disconnect', () => {
+                statusEl.textContent = 'Disconnected';
+                statusEl.className = 'disconnected';
+                socketIdEl.textContent = 'N/A';
+                authSection.classList.remove('hidden');
+                mainContent.classList.add('hidden');
+                gameControlsEl.classList.add('hidden');
+                log(`❌ Disconnected from server.`);
+            });
 
-        // --- DOM Event Handlers ---
+            socket.on('room:ready', () => {
+                log('🚀 Room is ready! Two players have joined. Game can begin.');
+                gameControlsEl.classList.remove('hidden');
+            });
+
+            socket.on('game:move', (move) => {
+                log(`📥 Received move from opponent: ${JSON.stringify(move)}`);
+            });
+
+            socket.on('player:disconnected', (data) => {
+                log(`⚠️ Opponent disconnected: ${data.message}`);
+                alert('Your opponent has disconnected.');
+                gameControlsEl.classList.add('hidden');
+            });
+        }
+
         createRoomBtn.addEventListener('click', () => {
             log('-> Emitting "room:create"...');
             socket.emit('room:create', (roomId) => {
@@ -113,10 +151,7 @@
 
         joinRoomBtn.addEventListener('click', () => {
             const roomIdToJoin = roomIdInput.value;
-            if (!roomIdToJoin) {
-                alert('Please enter a Room ID.');
-                return;
-            }
+            if (!roomIdToJoin) return alert('Please enter a Room ID.');
             log(`-> Emitting "room:join" for room: ${roomIdToJoin}...`);
             socket.emit('room:join', roomIdToJoin, (response) => {
                 if (response.success) {
@@ -132,15 +167,8 @@
 
         sendMoveBtn.addEventListener('click', () => {
             const moveData = moveInput.value;
-            if (!currentRoomId) {
-                alert('You must be in a room to send a move.');
-                return;
-            }
-            if (!moveData) {
-                alert('Please enter some move data.');
-                return;
-            }
-
+            if (!currentRoomId) return alert('You must be in a room to send a move.');
+            if (!moveData) return alert('Please enter some move data.');
             const payload = { roomId: currentRoomId, move: moveData };
             log(`-> Emitting "game:move": ${JSON.stringify(payload)}`);
             socket.emit('game:move', payload);

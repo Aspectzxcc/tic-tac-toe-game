@@ -1,4 +1,4 @@
-import server from './src/app.ts';
+import server from './src/app.js';
 import 'dotenv/config';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
