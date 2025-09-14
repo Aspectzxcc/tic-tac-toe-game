@@ -1,5 +1,5 @@
 import { Socket, Server } from "socket.io";
-import { roomStore } from "./roomStore.js";
+import { roomStore } from "../roomStore.js";
 
 export function createRoom(socket: Socket, callback: (roomId: string) => void) {
   const roomId = Math.random().toString(36).substring(2, 8);
