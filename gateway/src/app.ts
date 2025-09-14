@@ -1,14 +1,15 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { join } from 'node:path';
-import registerSocketHandlers from './socket.ts';
+import registerSocketHandlers from './socket/index.ts';
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
-app.get('/', (req, res) => {
+// test UI
+app.get('/', (req: Request, res: Response) => {
   res.sendFile(join(process.cwd(), 'index.html'));
 });
 

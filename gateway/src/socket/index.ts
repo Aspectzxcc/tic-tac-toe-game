@@ -1,26 +1,17 @@
 import { Server, Socket } from 'socket.io';
+import { createRoom, joinRoom } from './roomController.ts';
 
 export default function registerSocketHandlers(io: Server) {
   io.on('connection', (socket: Socket) => {
     console.log(`${socket.id} connected`);
 
+    // create room
     socket.on('room:create', (callback) => {
-      const roomId = Math.random().toString(36).substring(2, 8);
-      socket.join(roomId);
-      callback(roomId);
-      console.log(`${socket.id} created room ${roomId}`);
+      createRoom(socket, callback);
     });
 
     socket.on('room:join', (roomId: string, callback) => {
-      const room = io.sockets.adapter.rooms.get(roomId);
-      if (room && room.size < 2) {
-        socket.join(roomId);
-        callback({ success: true });
-        console.log(`${socket.id} joined room ${roomId}`);
-        io.to(roomId).emit('room:ready');
-      } else {
-        callback({ success: false, message: 'Room is full or does not exist' });
-      }
+      joinRoom(io, socket, roomId, callback);
     });
 
     socket.on('game:move', (data) => {
@@ -32,6 +23,10 @@ export default function registerSocketHandlers(io: Server) {
 
     socket.on('disconnect', () => {
       console.log(`${socket.id} disconnected`);
+      const rooms = Array.from(socket.rooms).filter((r) => r !== socket.id);
+      rooms.forEach((roomId) => {
+        socket.to(roomId).emit('player:disconnected', { message: 'Opponent disconnected' });
+      });
     });
   });
 }
