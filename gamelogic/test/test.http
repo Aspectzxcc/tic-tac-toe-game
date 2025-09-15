@@ -1,0 +1,9 @@
+### Create a new game
+POST http://localhost:3000/api/game/create
+Content-Type: application/json
+
+{
+  "player1ID": "user1",
+  "player2ID": "user2",
+  "roomId": "room123"
+}
