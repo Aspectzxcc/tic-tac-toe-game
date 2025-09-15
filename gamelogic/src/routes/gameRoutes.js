@@ -3,7 +3,10 @@ const router = express.Router();
 const gameController = require('../controllers/gameController');
 const gameState = require('../logic/board');
 
-router.post('/move', gameController.calculateMove);
+
+router.post('/:gameId/move', gameController.calculateMove);
+
+router.post('/create', gameController.createGame);
 
 router.get('/',(req, res) =>{
   res.send(gameState)
