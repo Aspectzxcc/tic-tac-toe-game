@@ -7,3 +7,14 @@ Content-Type: application/json
   "player2ID": "user2",
   "roomId": "room123"
 }
+### Make a move in a game
+POST http://localhost:3000/api/game/game-509srsome/move
+Content-Type: application/json
+
+{
+  "playerID": "user1",
+  "move": {
+    "row": 0,
+    "col": 1
+  }
+}

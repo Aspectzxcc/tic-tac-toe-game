@@ -34,6 +34,7 @@ exports.calculateMove = (req, res) => {
     const { gameId } = req.params;
     const { move, playerID } = req.body;
 
+    // Input validation
     if (!gameId || !games[gameId]) {
       return res.status(400).json({ error: "Invalid or missing gameId" });
     }
@@ -53,6 +54,17 @@ exports.calculateMove = (req, res) => {
     if (games[gameId].gameState.currentPlayer !== playerID) {
       return res.status(400).json({ error: `It's not your turn. Current player: ${games[gameId].gameState.players[games[gameId].gameState.currentPlayer]}` });
     }
+
+    // Update board state
+    const playerSymbol = games[gameId].gameState.players[playerID];
+    games[gameId].gameState.board[move.row][move.col] = playerSymbol;
+
+    // Update current player
+    const playerList = Object.keys(games[gameId].gameState.players);
+    const nextPlayer = playerList.find(id => id !== games[gameId].gameState.currentPlayer);
+    games[gameId].gameState.currentPlayer = nextPlayer;
+
+   res.status(200).json({ gameState: games[gameId].gameState });
 
   } catch (error) {
     console.error("Error in calculateMove:", error);
