@@ -16,7 +16,7 @@ exports.createGame = (req, res) => {
           ["", "", ""],
           ["", "", ""],
         ],
-        players: { player1ID: "X", player2ID: "O" },
+        players: { [player1ID]: "X", [player2ID]: "O" },
         currentPlayer: player1ID,
         winner: null,
       },
@@ -32,15 +32,28 @@ exports.createGame = (req, res) => {
 exports.calculateMove = (req, res) => {
   try {
     const { gameId } = req.params;
-    const { move } = req.body;
+    const { move, playerID } = req.body;
 
-    if (!gameId || games.gameId === undefined) {
+    if (!gameId || !games[gameId]) {
       return res.status(400).json({ error: "Invalid or missing gameId" });
     }
 
     if (!move || move.row === undefined || move.col === undefined) {
       return res.status(400).json({ error: "Invalid move data" });
     }
+
+    if (games[gameId].gameState.winner) {
+      return res.status(400).json({ error: "Game already concluded" });
+    }
+
+    if(games[gameId].gameState.board[move.row][move.col]){
+      return res.status(400).json({ error: "Cell already occupied" });
+    }
+
+    if (games[gameId].gameState.currentPlayer !== playerID) {
+      return res.status(400).json({ error: `It's not your turn. Current player: ${games[gameId].gameState.players[games[gameId].gameState.currentPlayer]}` });
+    }
+
   } catch (error) {
     console.error("Error in calculateMove:", error);
     res.status(500).json({ error: "Internal Server Error" });
