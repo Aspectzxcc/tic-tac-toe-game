@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import App from './App';
 import { AuthPage } from './features/auth/routes/AuthPage';
 import { LobbyPage } from './features/lobby/routes/LobbyPage';
+import { GamePage } from './features/game/routes/GamePage';
 
 const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
       {
         path: 'lobby',
         element: <LobbyPage />,
+      },
+      {
+        path: 'game', // to be changed with game/:gameId
+        element: <GamePage />,
       }
     ],
   },
