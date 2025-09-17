@@ -61,8 +61,8 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
       const response = await createGame(user.id, user.username);
       navigate(`/game/${response.data.gameId}`);
     } catch (error) {
-      console.error("Error creating room:", error);
-      alert("Failed to create room. Please try again.");
+      console.error("Error creating room:", (error as any).response?.data?.error);
+      alert((error as any).response?.data?.error);
     }
   };
 
@@ -73,8 +73,8 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
       await joinGame(selectedGameId, user.id, user.username);
       navigate(`/game/${selectedGameId}`);
     } catch (error) {
-      console.error("Error joining room:", error);
-      alert("Failed to join room. Please try again.");
+      console.error("Error joining room:", (error as any).response?.data?.error);
+      alert((error as any).response?.data?.error);
     }
   };
 

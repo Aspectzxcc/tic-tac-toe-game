@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, RefreshCwIcon } from "@/components/icons/GameIcons";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { leaveGame } from "@/api/gamelogic";
 
 export function GameHeader() {
@@ -25,12 +25,10 @@ export function GameHeader() {
 
   return (
     <header className="flex items-center justify-between w-full mb-8">
-      <Link to="/lobby">
-        <Button variant="outline" onClick={handleLeaveGame}>
-          <ArrowLeftIcon className="mr-2 h-4 w-4" />
-          Back to Lobby
-        </Button>
-      </Link>
+      <Button variant="outline" onClick={handleLeaveGame}>
+        <ArrowLeftIcon className="mr-2 h-4 w-4" />
+        Back to Lobby
+      </Button>
 
       <div className="text-center">
         <h1 className="text-3xl font-bold">Tic Tac Pro</h1>

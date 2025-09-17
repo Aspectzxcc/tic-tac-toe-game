@@ -69,8 +69,10 @@ export function GamePage() {
     try {
       await makeMove(gameId, user.id, { row, col });
     } catch (error) {
-      console.error("Error making move:", error);
-      alert("Could not make move. Please try again.");
+      console.log(error);
+      const errorMessage = (error as any).response?.data?.error || "An unknown error occurred while making the move.";
+      console.error("Error making move:", errorMessage);
+      alert(errorMessage);
     }
   };
 

@@ -193,9 +193,9 @@ exports.leaveGame = (req, res) => {
       game.gameState.currentPlayerId = game.gameState.hostId;
 
       events.push(
-        { event: "games:updated", data: Object.values(games) },
+        { event: "game:player_left", data: { gameId, message: "A player has left, waiting for a new player to join." } },
         { event: "game:state_update", data: game },
-        { event: "game:player_left", data: { gameId, message: "A player has left, waiting for a new player to join." } }
+        { event: "games:updated", data: Object.values(games) },
       );
       notifyGateway(events);
       return res.status(200).json({ message: "Player left, room is now open." });
