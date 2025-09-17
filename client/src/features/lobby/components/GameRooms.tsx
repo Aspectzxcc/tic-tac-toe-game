@@ -56,10 +56,17 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
   const handleCreateRoom = () => {
     if (!socket) return;
 
-    socket.emit("room:create", (roomId: string) => {
-      console.log(`Room created with ID: ${roomId}`);
-      navigate(`/game/${roomId}`);
-    });
+    socket.emit(
+      "room:create",
+      (response: { success: boolean; roomId?: string; message?: string }) => {
+        if (response.success && response.roomId) {
+          console.log(`Room created with ID: ${response.roomId}`);
+          navigate(`/game/${response.roomId}`);
+        } else {
+          alert(`Failed to create room: ${response.message}`);
+        }
+      }
+    );
   };
 
   const handleJoinRoom = () => {
