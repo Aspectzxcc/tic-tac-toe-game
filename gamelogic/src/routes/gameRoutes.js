@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const gameController = require('../controllers/gameController');
-const gameState = require('../logic/board');
 
+router.get("/", gameController.getGames);
 
 router.post('/:gameId/move', gameController.calculateMove);
 

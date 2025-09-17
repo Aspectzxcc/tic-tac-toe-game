@@ -6,7 +6,7 @@ export function createRoom(socket: Socket, callback: (roomId: string) => void) {
   roomStore.createRoom(roomId, socket.id);
   socket.join(roomId);
   callback(roomId);
-  console.log(`${socket.id} created room ${roomId}`);
+  console.log(`${socket.data.user.username} created room ${roomId}`);
 }
 
 export function joinRoom(io: Server, socket: Socket, roomId: string, callback: (response: { success: boolean; message?: string }) => void) {

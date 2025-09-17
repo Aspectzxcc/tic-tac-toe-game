@@ -1,4 +1,13 @@
-const { games } = require("../logic/board");
+games = {}
+
+exports.getGames = (req, res) => {
+  try {
+    res.status(200).json(games);
+  } catch (error) {
+    console.error("Error in getGames:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
 
 exports.createGame = (req, res) => {
   try {

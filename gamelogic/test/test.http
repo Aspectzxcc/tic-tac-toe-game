@@ -1,5 +1,10 @@
 ### Create a new game
 @baseUrl = http://localhost:3002
+
+GET {{baseUrl}}/api/game
+Content-Type: application/json
+
+### Create a new game
 POST {{baseUrl}}/api/game/create
 Content-Type: application/json
 
