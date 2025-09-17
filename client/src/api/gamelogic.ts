@@ -8,3 +8,4 @@ export const getGames = () => gameClient.get("/api/game");
 export const getGameById = (gameId: string) => gameClient.get(`/api/game/${gameId}`);
 export const createGame = (hostId: string) => gameClient.post("/api/game", { hostId });
 export const joinGame = (gameId: string, playerId: string) => gameClient.post(`/api/game/${gameId}/join`, { playerId });
+export const leaveGame = (gameId: string, playerId: string) => gameClient.post(`/api/game/${gameId}/leave`, { data: { playerId } });

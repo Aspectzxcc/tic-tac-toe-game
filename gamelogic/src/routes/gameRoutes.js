@@ -12,7 +12,7 @@ router.post('/:gameId/move', gameController.calculateMove);
 
 router.post('/:gameId/join', gameController.joinGame);
 
-router.delete('/:gameId/leave', gameController.leaveGame);
+router.post('/:gameId/leave', gameController.leaveGame);
 
 router.post('/:gameId/check', gameController.checkWinner);
 
