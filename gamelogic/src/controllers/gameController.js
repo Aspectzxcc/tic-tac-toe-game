@@ -53,6 +53,8 @@ exports.createGame = (req, res) => {
 
     notifyGateway("game:created", Object.values(games));
 
+    console.log(`Game created with ID: ${gameId}`);
+
     res.status(201).json({ gameId });
   } catch (error) {
     console.error("Error in createGame:", error);
