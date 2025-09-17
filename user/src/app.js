@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 const mongoose = require('mongoose');
 const routes = require('./routes/index');
 
@@ -10,6 +11,7 @@ mongoose.connect("mongodb://localhost:27017/tic-tac-toe").then(() => {
   console.log('Connected to database');
 })
 // Middleware
+app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 
