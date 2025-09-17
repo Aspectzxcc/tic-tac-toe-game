@@ -1,52 +1,55 @@
 import { Socket, Server } from "socket.io";
 import { getGames, leaveGame } from "../../client/gamelogicClient.js";
+import { removeUser, broadcastOnlinePlayers } from "../onlinePlayersManager.js";
 
 const pendingDisconnects = new Map<string, NodeJS.Timeout>();
 
 export async function handleDisconnect(io: Server, socket: Socket) {
-  const userId = socket.data.user?.id || socket.data.user?.username;
-  console.log(`User '${userId}' disconnected`);
+  const user = socket.data.user;
+  if (!user) return;
 
-  // Start a timeout for this user
+  console.log(`User '${user.username}' disconnected. Starting grace period timer.`);
+
   const timeout = setTimeout(async () => {
+    // If this timeout executes, it means the user did not reconnect in time.
+    console.log(`Grace period for '${user.username}' ended. Performing cleanup.`);
+    pendingDisconnects.delete(user.id); // Clean up the pending map
+
+    removeUser(user.id);
+    broadcastOnlinePlayers(io); // Broadcast the new list after removal
+
     try {
       const response = await getGames();
       const games = response.data;
       for (const game of games) {
-        const playerIds = Object.keys(game.gameState.players || {});
-        if (playerIds.includes(userId)) {
-          try {
-            await leaveGame(game.gameId, userId);
-            console.log(
-              `Notified gamelogic to remove user '${userId}' from game '${game.gameId}'`
-            );
-            socket
-              .to(game.gameId)
-              .emit("player:disconnected", { message: "Opponent has disconnected" });
-          } catch (error: any) {
-            console.error(
-              `Failed to notify gamelogic for user '${userId}' leaving game '${game.gameId}':`,
-              error?.response?.data || error.message
-            );
-          }
+        if (Object.keys(game.gameState.players || {}).includes(user.id)) {
+          await leaveGame(game.gameId, user.id);
+          socket
+            .to(game.gameId)
+            .emit("player:disconnected", {
+              message: "Opponent has disconnected",
+            });
         }
       }
     } catch (error) {
-      console.error("Failed to fetch games from gamelogic service:", error);
+      console.error("Failed to fetch games for disconnect cleanup:", error);
     }
-    pendingDisconnects.delete(userId);
   }, 15000); // 15 seconds
 
-  pendingDisconnects.set(userId, timeout);
+  pendingDisconnects.set(user.id, timeout);
 }
 
-// Call this on reconnect to clear the timeout
+// This is called on a new connection and is the key to preventing cleanup
 export function handleReconnect(socket: Socket) {
-  const userId = socket.data.user?.id || socket.data.user?.username;
-  const timeout = pendingDisconnects.get(userId);
+  const user = socket.data.user;
+  if (!user) return;
+
+  const timeout = pendingDisconnects.get(user.id);
   if (timeout) {
     clearTimeout(timeout);
-    pendingDisconnects.delete(userId);
-    console.log(`User '${userId}' reconnected in time, not removing from game.`);
+    pendingDisconnects.delete(user.id);
+    console.log(
+      `User '${user.username}' reconnected in time. Cleanup cancelled.`
+    );
   }
 }
