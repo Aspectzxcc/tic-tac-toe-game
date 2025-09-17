@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_GAMELOGIC_API_BASE_URL || "http://localhost:3002";
+
 const gamelogicClient = axios.create({
-  baseURL: "http://localhost:3002", // Gamelogic server URL
+  baseURL: API_BASE_URL,
 });
 
 export const getGames = () => gamelogicClient.get("/api/game");

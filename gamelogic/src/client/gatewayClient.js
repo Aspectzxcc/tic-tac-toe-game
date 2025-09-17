@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const GATEWAY_URL = "http://localhost:3001";
+const GATEWAY_URL = process.env.GATEWAY_URL || "http://localhost:3001";
 
 async function notifyGateway(events) {
   try {
