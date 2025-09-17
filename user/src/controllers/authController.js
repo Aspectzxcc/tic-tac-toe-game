@@ -2,10 +2,15 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils/jwtHandler.js");
 
+
 exports.register = async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    if (!username || !password) {
+      return res.status(400).json({ message: " username or password does not exist" });
+    }
+    
     let user = await User.findOne({ username });
     if (user) {
       return res.status(400).json({ message: "Username already exists" });
@@ -20,11 +25,12 @@ exports.register = async (req, res) => {
     await user.save();
 
     // create JWT TOKEN
-    const token = generateToken(user);
+    const token = generateToken({ id: user._id, username: user.username });
 
     res.status(201).json({
       message: "User registered successfully",
       token,
+      
       user: {
         id: user._id,
         username,
@@ -40,11 +46,16 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    if (!username || !password) {
+      return res.status(400).json({ message: " username or password does not exist" });
+    }
+
     // check if user exist
     const user = await User.findOne({ username });
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
+    
 
     // validate pass
     const isMatch = await bcrypt.compare(password, user.password);
@@ -53,7 +64,7 @@ exports.login = async (req, res) => {
     }
 
     // create JWT TOKEN
-    const token = generateToken(user);
+    const token = generateToken({ id: user._id, username: user.username });
 
     res.status(200).json({
       message: "Login successful",
