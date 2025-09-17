@@ -1,6 +1,6 @@
 import { Socket, Server } from "socket.io";
 import { getGames, leaveGame } from "../../client/gamelogicClient.js";
-import { removeUser, broadcastOnlinePlayers } from "../onlinePlayersManager.js";
+import { removeUser, broadcastOnlinePlayers, removeUserSocket } from "../onlinePlayersManager.js";
 
 const pendingDisconnects = new Map<string, NodeJS.Timeout>();
 
@@ -16,6 +16,7 @@ export async function handleDisconnect(io: Server, socket: Socket) {
     pendingDisconnects.delete(user.id); // Clean up the pending map
 
     removeUser(user.id);
+    removeUserSocket(user.id);
     broadcastOnlinePlayers(io); // Broadcast the new list after removal
 
     try {

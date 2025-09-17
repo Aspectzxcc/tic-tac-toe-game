@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { io } from "../app.js";
-import { broadcastOnlinePlayers } from "../socket/onlinePlayersManager.js";
+import { broadcastOnlinePlayers, findSocketByUserId } from "../socket/onlinePlayersManager.js";
 
 const eventHandlers: Record<string, (data: any) => void> = {
   "game:state_update": (data) => {
@@ -15,6 +15,26 @@ const eventHandlers: Record<string, (data: any) => void> = {
   "games:updated": (data) => {
     io.emit("games:updated", data);
     broadcastOnlinePlayers(io);
+  },
+  "system:join_room": (data) => {
+    const { playerId, gameId } = data;
+    if (!playerId || !gameId) return;
+
+    const socket = findSocketByUserId(playerId);
+    if (socket) {
+      socket.join(gameId);
+      console.log(`[Internal Event] Player ${playerId} (${socket.id}) joined room ${gameId}`);
+    }
+  },
+  "system:leave_room": (data) => {
+    const { playerId, gameId } = data;
+    if (!playerId || !gameId) return;
+    
+    const socket = findSocketByUserId(playerId);
+    if (socket) {
+      socket.leave(gameId);
+      console.log(`[Internal Event] Player ${playerId} (${socket.id}) left room ${gameId}`);
+    }
   },
 };
 

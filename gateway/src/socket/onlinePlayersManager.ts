@@ -1,4 +1,4 @@
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { getGames } from "../client/gamelogicClient.js";
 
 // --- Types ---
@@ -18,7 +18,6 @@ interface PlayerWithStatus extends OnlineUser {
   status: 'online' | 'playing';
 }
 
-// --- User Store ---
 const onlineUsers = new Map<string, OnlineUser>();
 
 export function addUser(user: OnlineUser) {
@@ -31,6 +30,19 @@ export function removeUser(userId: string) {
   onlineUsers.delete(userId);
 }
 
+const userSockets = new Map<string, Socket>();
+
+export function addUserSocket(userId: string, socket: Socket) {
+  userSockets.set(userId, socket);
+}
+export function removeUserSocket(userId: string) {
+  userSockets.delete(userId);
+}
+
+export function findSocketByUserId(userId: string): Socket | undefined {
+  return userSockets.get(userId);
+}
+
 export function getOnlineUsers(): OnlineUser[] {
   return Array.from(onlineUsers.values());
 }
@@ -39,8 +51,6 @@ export function isUserOnline(userId: string): boolean {
   return onlineUsers.has(userId);
 }
 
-
-// --- Broadcaster ---
 export async function broadcastOnlinePlayers(io: Server) {
   try {
     const response = await getGames();

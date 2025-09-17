@@ -4,7 +4,7 @@ import {
   handleReconnect,
 } from "./controller/disconnectController.js";
 import { auth } from "./middleware/auth.js";
-import { addUser, broadcastOnlinePlayers } from "./onlinePlayersManager.js";
+import { addUser, addUserSocket, broadcastOnlinePlayers } from "./onlinePlayersManager.js";
 import { leaveRoom } from "./controller/leaveController.js";
 
 export default function registerSocketHandlers(io: Server) {
@@ -16,6 +16,7 @@ export default function registerSocketHandlers(io: Server) {
     };
 
     addUser(user);
+    addUserSocket(user.id, socket);
     handleReconnect(socket);
 
     broadcastOnlinePlayers(io);

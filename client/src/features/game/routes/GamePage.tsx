@@ -67,7 +67,8 @@ export function GamePage() {
     }
 
     try {
-      await makeMove(gameId, user.id, { row, col });
+      const response = await makeMove(gameId, user.id, { row, col });
+      setGame(response.data);
     } catch (error) {
       console.log(error);
       const errorMessage = (error as any).response?.data?.error || "An unknown error occurred while making the move.";

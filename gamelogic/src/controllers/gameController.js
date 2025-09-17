@@ -112,7 +112,8 @@ exports.createGame = (req, res) => {
     };
 
     notifyGateway([
-      { event: "games:updated", data: Object.values(games) }
+      { event: "games:updated", data: Object.values(games) },
+      { event: "system:join_room", data: { playerId: hostId, gameId: gameId } }
     ]);
     res.status(201).json(games[gameId]);
   } catch (error) {
@@ -146,7 +147,8 @@ exports.joinGame = (req, res) => {
 
     notifyGateway([
       { event: "games:updated", data: Object.values(games) },
-      { event: "game:state_update", data: { ...game, allGames: Object.values(games) } }
+      { event: "game:state_update", data: { ...game, allGames: Object.values(games) } },
+      { event: "system:join_room", data: { playerId, gameId } }
     ]);
 
     res.status(200).json(game);
@@ -176,7 +178,8 @@ exports.leaveGame = (req, res) => {
       delete games[gameId];
       events.push(
         { event: "games:updated", data: Object.values(games) },
-        { event: "game:ended", data: { gameId, message: "Game ended as host left" } }
+        { event: "game:ended", data: { gameId, message: "Game ended as host left" } },
+        { event: "system:leave_room", data: { playerId, gameId } }
       );
       notifyGateway(events);
       return res.status(200).json({ message: "Game ended as host left" });
@@ -196,6 +199,7 @@ exports.leaveGame = (req, res) => {
         { event: "game:player_left", data: { gameId, message: "A player has left, waiting for a new player to join." } },
         { event: "game:state_update", data: game },
         { event: "games:updated", data: Object.values(games) },
+        { event: "system:leave_room", data: { playerId, gameId } }
       );
       notifyGateway(events);
       return res.status(200).json({ message: "Player left, room is now open." });
