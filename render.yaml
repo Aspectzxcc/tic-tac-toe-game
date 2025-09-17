@@ -1,7 +1,7 @@
-# render.yaml - Defines ONLY the backend services
+# render.yaml - CORRECTED for Free Tier Networking
 
 services:
-  # 1. User Service
+  # 1. User Service (no changes needed here)
   - type: web
     name: user-service
     runtime: node
@@ -20,7 +20,7 @@ services:
     plan: free
     envVars:
       - key: GATEWAY_URL
-        value: http://gateway-service:10000
+        value: ${{ services.gateway-service.url }}
 
   # 3. Gateway Service
   - type: web
@@ -33,4 +33,4 @@ services:
     healthCheckPath: /
     envVars:
       - key: GAMELOGIC_URL
-        value: http://gamelogic-service:10000/api/game
+        value: ${{ services.gamelogic-service.url }}/api/game
