@@ -1,7 +1,7 @@
 services:
   # 1. User Service (no changes needed here)
   - type: web
-    name: user-service
+    name: tic-tac-pro-user-service
     runtime: node
     rootDir: user
     buildCommand: "npm install"
@@ -12,7 +12,7 @@ services:
 
   # 2. Gamelogic Service
   - type: web
-    name: gamelogic-service
+    name: tic-tac-pro-gamelogic-service
     runtime: node
     rootDir: gamelogic
     buildCommand: "npm install"
@@ -23,7 +23,7 @@ services:
 
   # 3. Gateway Service
   - type: web
-    name: gateway-service
+    name: tic-tac-pro-gateway-service
     runtime: node
     rootDir: gateway
     buildCommand: "npm install && npm run build"
