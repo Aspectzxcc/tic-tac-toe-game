@@ -9,6 +9,7 @@ services:
     buildCommand: "npm install"
     startCommand: "node server.js"
     plan: free
+    healthCheckPath: /
 
   # 2. Gamelogic Service
   - type: web
@@ -18,9 +19,7 @@ services:
     buildCommand: "npm install"
     startCommand: "node server.js"
     plan: free
-    envVars:
-      - key: GATEWAY_URL
-        value: ${{ services.gateway-service.url }}
+    healthCheckPath: /
 
   # 3. Gateway Service
   - type: web
@@ -31,6 +30,3 @@ services:
     startCommand: "npm start"
     plan: free
     healthCheckPath: /
-    envVars:
-      - key: GAMELOGIC_URL
-        value: ${{ services.gamelogic-service.url }}
