@@ -12,7 +12,7 @@ interface PlayerCardProps {
   isTurn: boolean;
 }
 
-export function PlayerCard({ username, playerSymbol, isCurrentUser, isTurn }: PlayerCardProps) {
+export function PlayerCard({ username, playerSymbol, isTurn }: PlayerCardProps) {
   const avatarBg = playerSymbol === 'X' ? 'bg-blue-500' : 'bg-red-500';
 
   return (
