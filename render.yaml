@@ -1,5 +1,3 @@
-# render.yaml - CORRECTED for Free Tier Networking
-
 services:
   # 1. User Service (no changes needed here)
   - type: web
