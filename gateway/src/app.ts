@@ -15,7 +15,6 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-app.options('*', cors(corsOptions)); // Preflight OPTIONS request handling
 app.use(cors(corsOptions));
 
 export const io = new Server(server, {
