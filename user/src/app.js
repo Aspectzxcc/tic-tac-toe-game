@@ -5,8 +5,6 @@ const mongoose = require('mongoose');
 const routes = require('./routes/index');
 require('dotenv').config();
 
-console.log('MongoDB URI:', process.env.MONGODB_URI);
-
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/tic-tac-toe").then(() => {
   console.log('Connected to database');
