@@ -92,6 +92,40 @@ exports.joinGame = (req, res) => {
   }
 };
 
+exports.leaveGame = (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { playerId } = req.body;
+    if (!gameId || !games[gameId]) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+
+    if (!playerId || !games[gameId].gameState.players[playerId]) {
+      return res.status(400).json({ error: "Player not in the game" });
+    }
+
+    if (games[gameId].gameState.host === playerId) {
+      delete games[gameId];
+      notifyGateway("games:updated", Object.values(games));
+      return res.status(200).json({ message: "Game ended as host left" });
+    }
+
+    delete games[gameId].gameState.players[playerId];
+
+    if (games[gameId].gameState.currentPlayer === playerId) {
+      const remainingPlayerId = Object.keys(games[gameId].gameState.players)[0];
+      games[gameId].gameState.currentPlayer = remainingPlayerId;
+    }
+
+    notifyGateway("games:updated", Object.values(games));
+
+    res.status(200).json({ message: "Player left the game" });
+  } catch (error) {
+    console.error("Error in leaveGame:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 exports.calculateMove = (req, res) => {
   try {
     const { gameId } = req.params;
