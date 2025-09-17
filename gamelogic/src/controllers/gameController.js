@@ -25,11 +25,12 @@ exports.getGameById = (req, res) => {
 
 exports.createGame = (req, res) => {
   try {
-    const { playerId, roomId } = req.body;
-    if (!playerId || !roomId) {
+    const { hostId } = req.body;
+    if (!hostId) {
       return res.status(400).json({ error: "Missing required fields" });
     }
-    const gameId = roomId; // Use the roomId from the gateway as the gameId
+
+    const gameId = Math.random().toString(36).substring(2, 10);
 
     if (games[gameId]) {
       return res
@@ -38,16 +39,16 @@ exports.createGame = (req, res) => {
     }
 
     games[gameId] = {
-      roomId,
+      gameId,
       gameState: {
         board: [
           ["", "", ""],
           ["", "", ""],
           ["", "", ""],
         ],
-        players: { [playerId]: "X" },
-        host: playerId,
-        currentPlayer: playerId,
+        players: { [hostId]: "X" },
+        host: hostId,
+        currentPlayer: hostId,
         winner: null,
       },
     };
@@ -79,14 +80,12 @@ exports.joinGame = (req, res) => {
     if (games[gameId].gameState.players[playerId]) {
       return res.status(400).json({ error: "Player already in the game" });
     }
-    const symbol = Object.values(games[gameId].gameState.players).includes("X")
-      ? "O"
-      : "X";
+    const symbol = Object.values(games[gameId].gameState.players).includes("X") ? "O" : "X";
     games[gameId].gameState.players[playerId] = symbol;
 
     notifyGateway("games:updated", Object.values(games));
-    
-    res.status(200).json({ gameState: games[gameId].gameState });
+
+    res.status(200).json({ gameId });
   } catch (error) {
     console.error("Error in joinGame:", error);
     res.status(500).json({ error: "Internal Server Error" });

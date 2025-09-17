@@ -13,13 +13,14 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useSocket } from "@/context/SocketContext";
 import { useNavigate } from "react-router-dom";
+import { createGame, joinGame } from "@/api/gamelogic";
 
 interface GameRoomsProps {
   initialRooms: Room[];
 }
 
 interface Room {
-  roomId: string;
+  gameId: string;
   gameState: {
     board: string[][];
     players: { player1ID: string; player2ID: string };
@@ -29,8 +30,9 @@ interface Room {
 }
 
 export function GameRooms({ initialRooms }: GameRoomsProps) {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
-  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const { socket } = useSocket();
   const navigate = useNavigate();
 
@@ -47,37 +49,30 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
     };
   }, [socket]);
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = async () => {
     if (!socket) return;
 
-    socket.emit(
-      "room:create",
-      (response: { success: boolean; roomId?: string; message?: string }) => {
-        if (response.success && response.roomId) {
-          console.log(`Room created with ID: ${response.roomId}`);
-          navigate(`/game/${response.roomId}`);
-        } else {
-          alert(`Failed to create room: ${response.message}`);
-        }
-      }
-    );
+    try {
+      const response = await createGame(user.id);
+      console.log("Room created successfully:", response.data);
+      navigate(`/game/${response.data.gameId}`);
+    } catch (error) {
+      console.error("Error creating room:", error);
+      alert("Failed to create room. Please try again.");
+    }
   };
 
-  const handleJoinRoom = () => {
-    if (!socket || !selectedRoomId) return;
+  const handleJoinRoom = async () => {
+    if (!socket || !selectedGameId) return;
 
-    socket.emit(
-      "room:join",
-      selectedRoomId,
-      (response: { success: boolean; message?: string }) => {
-        if (response.success) {
-          console.log(`Successfully joined room: ${selectedRoomId}`);
-          navigate(`/game/${selectedRoomId}`);
-        } else {
-          alert(`Failed to join room: ${response.message}`);
-        }
-      }
-    );
+    try {
+      const response = await joinGame(selectedGameId, user.id);
+      console.log("Joined room successfully:", response.data.gameId);
+      navigate(`/game/${response.data.gameId}`);
+    } catch (error) {
+      console.error("Error joining room:", error);
+      alert("Failed to join room. Please try again.");
+    }
   };
 
   return (
@@ -99,18 +94,18 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
 
             return (
               <div
-                key={room.roomId}
-                onClick={() => !isFull && setSelectedRoomId(room.roomId)}
+                key={room.gameId}
+                onClick={() => !isFull && setSelectedGameId(room.gameId)}
                 className={cn(
                   "p-4 border rounded-lg flex justify-between items-center transition-all",
                   isFull
                     ? "bg-gray-100 cursor-not-allowed opacity-60"
                     : "cursor-pointer hover:border-primary",
-                  selectedRoomId === room.roomId && "border-primary border-2"
+                  selectedGameId === room.gameId && "border-primary border-2"
                 )}
               >
                 <div>
-                  <p className="font-bold">Room: {room.roomId}</p>
+                  <p className="font-bold">Room: {room.gameId}</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span>{playerCount}/2 players</span>
                   </div>
@@ -137,7 +132,7 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
       <CardFooter className="grid grid-cols-2 gap-4">
         <Button
           className="w-full font-semibold"
-          disabled={!selectedRoomId}
+          disabled={!selectedGameId}
           onClick={handleJoinRoom}
         >
           Join Game
