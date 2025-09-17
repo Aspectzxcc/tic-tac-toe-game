@@ -9,8 +9,18 @@ require('dotenv').config();
 mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/tic-tac-toe").then(() => {
   console.log('Connected to database');
 })
+
+const corsOptions = {
+  origin: "*", // 1. Explicitly enable all origins
+  methods: "GET,POST,PUT,DELETE,OPTIONS", // 2. Allow all necessary methods
+  allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization", // 3. Allow necessary headers
+  optionsSuccessStatus: 200
+};
+
+app.options('*', cors(corsOptions)); // Preflight OPTIONS request handling
+
 // Middleware
-app.use(cors())
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 
