@@ -1,3 +1,4 @@
+import { redirect } from "react-router-dom";
 import { login as apiLogin, register as apiRegister } from "@/api/user";
 
 export async function loginAction({ request }: { request: Request }) {
@@ -11,7 +12,7 @@ export async function loginAction({ request }: { request: Request }) {
     if (token) {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      return { success: true, token, user };
+      return redirect("/lobby");
     }
     return { success: false, error: "No token received" };
   } catch (error: any) {
@@ -34,7 +35,7 @@ export async function registerAction({ request }: { request: Request }) {
     if (token) {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      return { success: true, token, user };
+      return redirect("/lobby");
     }
     return { success: false, error: "No token received" };
   } catch (error: any) {

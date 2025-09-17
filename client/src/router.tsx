@@ -8,6 +8,7 @@ import { LobbyPage } from './features/lobby/routes/LobbyPage';
 import { GamePage } from './features/game/routes/GamePage';
 import { loginLoader } from './features/auth/loaders';
 import { loginAction, registerAction } from './features/auth/actions';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 const router = createBrowserRouter([
   {
@@ -38,11 +39,19 @@ const router = createBrowserRouter([
       },
       {
         path: 'lobby',
-        element: <LobbyPage />,
+        element: (
+          <ProtectedRoute>
+            <LobbyPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'game', // to be changed with game/:gameId
-        element: <GamePage />,
+        element: (
+          <ProtectedRoute>
+            <GamePage />
+          </ProtectedRoute>
+        ),
       }
     ],
   },
