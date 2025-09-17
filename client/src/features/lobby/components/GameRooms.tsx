@@ -42,8 +42,14 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
       setRooms(updatedRooms);
     });
 
+    socket.on("game:joined", (updatedRooms: Room[]) => {
+      console.log("Received room update from server:", updatedRooms);
+      setRooms(updatedRooms);
+    });
+
     return () => {
       socket.off("game:created");
+      socket.off("game:joined");
     };
   }, [socket]);
 
