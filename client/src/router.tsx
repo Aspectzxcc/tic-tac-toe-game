@@ -9,6 +9,7 @@ import { GamePage } from './features/game/routes/GamePage';
 import { loginLoader } from './features/auth/loaders';
 import { loginAction, registerAction, logoutAction } from './features/auth/actions';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { lobbyLoader } from './features/lobby/loaders';
 
 const router = createBrowserRouter([
   {
@@ -48,6 +49,7 @@ const router = createBrowserRouter([
             <LobbyPage />
           </ProtectedRoute>
         ),
+        loader: lobbyLoader
       },
       {
         path: 'game', // to be changed with game/:gameId

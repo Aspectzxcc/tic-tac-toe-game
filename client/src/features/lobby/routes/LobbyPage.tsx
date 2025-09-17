@@ -4,13 +4,19 @@ import { OnlinePlayers } from "../components/OnlinePlayers";
 import { PlayerStats } from "../components/PlayerStats";
 import { useSocket } from "@/context/SocketContext";
 import { useEffect } from "react";
+import { useLoaderData } from "react-router-dom";
+
+interface LobbyLoaderData {
+  initialRooms: any[];
+}
 
 export function LobbyPage() {
+  const { initialRooms } = useLoaderData() as LobbyLoaderData;
   const { socket, isConnected } = useSocket();
 
   useEffect(() => {
     if (socket) {
-      
+      // Your existing socket logic can remain
       return () => {
         socket.off("some_event");
       };
@@ -30,8 +36,8 @@ export function LobbyPage() {
 
           {/* Right Column */}
           <div className="lg:col-span-2">
-            <GameRooms />
-            {/* You can display connection status for debugging */}
+            {/* --- MODIFIED: Pass loader data as a prop --- */}
+            <GameRooms initialRooms={initialRooms} />
             <div className="mt-4 text-center text-sm text-muted-foreground">
               Connection Status: {isConnected ? "Connected" : "Disconnected"}
             </div>

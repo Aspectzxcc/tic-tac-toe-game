@@ -32,7 +32,7 @@ exports.createGame = (req, res) => {
       },
     };
 
-    notifyGateway("game:created", { game: games[gameId] });
+    notifyGateway("game:created", Object.values(games));
 
     res.status(201).json({ gameId });
   } catch (error) {

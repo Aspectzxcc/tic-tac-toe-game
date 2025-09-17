@@ -14,16 +14,22 @@ import { cn } from "@/lib/utils";
 import { useSocket } from "@/context/SocketContext";
 import { useNavigate } from "react-router-dom";
 
-interface Room {
-  id: string;
-  name: string;
-  difficulty: string;
-  players: string;
-  status: string;
+interface GameRoomsProps {
+  initialRooms: Room[];
 }
 
-export function GameRooms() {
-  const [rooms, setRooms] = useState<Room[]>([]);
+interface Room {
+  roomId: string;
+  gameState: {
+    board: string[][];
+    players: { player1ID: string; player2ID: string };
+    currentPlayer: string;
+    winner: string | null;
+  };
+}
+
+export function GameRooms({ initialRooms }: GameRoomsProps) {
+  const [rooms, setRooms] = useState<Room[]>(initialRooms);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const { socket } = useSocket();
   const navigate = useNavigate();
@@ -35,12 +41,12 @@ export function GameRooms() {
       console.log("Received room update from server:", updatedRooms);
       setRooms(updatedRooms);
     });
-    
+
     return () => {
       socket.off("game:created");
     };
   }, [socket]);
-  
+
   const handleCreateRoom = () => {
     if (!socket) return;
 
@@ -79,43 +85,47 @@ export function GameRooms() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow space-y-4">
-        {rooms.map((room) => (
-          <div
-            key={room.id}
-            onClick={() => room.status !== "Full" && setSelectedRoomId(room.id)}
-            className={cn(
-              "p-4 border rounded-lg flex justify-between items-center transition-all",
-              room.status === "Full"
-                ? "bg-gray-100 cursor-not-allowed opacity-60"
-                : "cursor-pointer hover:border-primary",
-              selectedRoomId === room.id && "border-primary border-2"
-            )}
-          >
-            <div>
-              <p className="font-bold">{room.name}</p>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        {rooms.length > 0 ? (
+          rooms.map((room) => {
+            const playerCount = Object.keys(room.gameState.players).length;
+            const isFull = playerCount >= 2;
+
+            return (
+              <div
+                key={room.roomId}
+                onClick={() => !isFull && setSelectedRoomId(room.roomId)}
+                className={cn(
+                  "p-4 border rounded-lg flex justify-between items-center transition-all",
+                  isFull
+                    ? "bg-gray-100 cursor-not-allowed opacity-60"
+                    : "cursor-pointer hover:border-primary",
+                  selectedRoomId === room.roomId && "border-primary border-2"
+                )}
+              >
+                <div>
+                  <p className="font-bold">Room: {room.roomId}</p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{playerCount}/2 players</span>
+                  </div>
+                </div>
                 <Badge
-                  variant={
-                    room.difficulty === "Easy"
-                      ? "secondary"
-                      : room.difficulty === "Medium"
-                      ? "default"
-                      : "destructive"
+                  variant={isFull ? "destructive" : "default"}
+                  className={
+                    !isFull
+                      ? "bg-green-100 text-green-700 border-green-200"
+                      : ""
                   }
                 >
-                  {room.difficulty}
+                  {isFull ? "Full" : "Available"}
                 </Badge>
-                <span>{room.players} players</span>
               </div>
-            </div>
-            <Badge
-              variant={room.status === "Full" ? "destructive" : "default"}
-              className="bg-green-100 text-green-700 border-green-200"
-            >
-              {room.status}
-            </Badge>
-          </div>
-        ))}
+            );
+          })
+        ) : (
+          <p className="text-muted-foreground text-center">
+            No active rooms. Create one to get started!
+          </p>
+        )}
       </CardContent>
       <CardFooter className="grid grid-cols-2 gap-4">
         <Button
