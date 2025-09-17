@@ -4,6 +4,8 @@ const gameController = require('../controllers/gameController');
 
 router.get("/", gameController.getGames);
 
+router.get("/:gameId", gameController.getGameById);
+
 router.post('/:gameId/move', gameController.calculateMove);
 
 router.post('/create', gameController.createGame);

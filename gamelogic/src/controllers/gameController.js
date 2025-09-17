@@ -10,6 +10,19 @@ exports.getGames = (req, res) => {
   }
 }
 
+exports.getGameById = (req, res) => {
+  try {
+    const { gameId } = req.params;
+    if (!gameId || !games[gameId]) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+    res.status(200).json(games[gameId]);
+  } catch (error) {
+    console.error("Error in getGameById:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
 exports.createGame = (req, res) => {
   try {
     const { player1ID, player2ID, roomId } = req.body;
