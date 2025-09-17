@@ -10,3 +10,4 @@ export const createGame = (hostId: string, hostUsername: string) => gamelogicCli
 export const joinGame = (gameId: string, playerId: string, playerUsername: string) => gamelogicClient.post(`/api/game/${gameId}/join`, { playerId, playerUsername });
 export const leaveGame = (gameId: string, playerId: string) => gamelogicClient.post(`/api/game/${gameId}/leave`, { playerId });
 export const makeMove = (gameId: string, playerId: string, move: { row: number; col: number }) => gamelogicClient.post(`/api/game/${gameId}/move`, { playerID: playerId, move });
+export const resetGame = (gameId: string) => gamelogicClient.post(`/api/game/${gameId}/reset`);

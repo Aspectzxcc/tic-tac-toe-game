@@ -14,4 +14,6 @@ router.post("/:gameId/join", gameController.joinGame);
 
 router.post("/:gameId/leave", gameController.leaveGame);
 
+router.post("/:gameId/reset", gameController.resetGame);
+
 module.exports = router;

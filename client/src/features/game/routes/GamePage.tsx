@@ -88,7 +88,7 @@ export function GamePage() {
   return (
     <div className="bg-background min-h-screen p-4 sm:p-8 flex flex-col items-center justify-center font-sans">
       <div className="w-full max-w-7xl flex flex-col flex-grow">
-        <GameHeader />
+        <GameHeader winnerId={game.gameState.winnerId} />
         {game.gameState.winnerId && (
           <div className="text-center mb-4 p-4 bg-yellow-100 border-2 border-yellow-300 rounded-lg shadow-md">
             <TrophyIcon className="h-8 w-8 mx-auto text-yellow-500" />

@@ -1,9 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, RefreshCwIcon } from "@/components/icons/GameIcons";
 import { useNavigate, useParams } from "react-router-dom";
-import { leaveGame } from "@/api/gamelogic";
+import { leaveGame, resetGame } from "@/api/gamelogic";
 
-export function GameHeader() {
+interface GameHeaderProps {
+  winnerId: string | null;
+}
+
+export function GameHeader({ winnerId }: GameHeaderProps) {
   const navigate = useNavigate();
   const { gameId } = useParams<{ gameId: string }>();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -23,6 +27,15 @@ export function GameHeader() {
     }
   };
 
+  const handleNewGame = async () => {
+    if (!gameId) return;
+    try {
+      await resetGame(gameId);
+    } catch (error) {
+      console.error("Failed to start a new game:", error);
+    }
+  };
+
   return (
     <header className="flex items-center justify-between w-full mb-8">
       <Button variant="outline" onClick={handleLeaveGame}>
@@ -35,7 +48,12 @@ export function GameHeader() {
         <p className="text-muted-foreground">Battle Arena</p>
       </div>
 
-      <Button variant="outline">
+      <Button
+        variant="outline"
+        onClick={handleNewGame}
+        disabled={!winnerId}
+        className={!winnerId ? 'invisible' : ''}
+      >
         <RefreshCwIcon className="mr-2 h-4 w-4" />
         New Game
       </Button>

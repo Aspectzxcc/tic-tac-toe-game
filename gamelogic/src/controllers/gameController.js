@@ -147,12 +147,13 @@ exports.joinGame = (req, res) => {
 
     notifyGateway([
       { event: "games:updated", data: Object.values(games) },
-      { event: "game:state_update", data: { ...game, allGames: Object.values(games) } },
+      { event: "game:state_update", data: game },
       { event: "system:join_room", data: { playerId, gameId } }
     ]);
 
     res.status(200).json(game);
-  } catch (error) {
+  } catch (error)
+ {
     console.error("Error in joinGame:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -263,6 +264,33 @@ exports.makeMove = (req, res) => {
     res.status(200).json(game);
   } catch (error) {
     console.error("Error in makeMove:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.resetGame = (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const game = games[gameId];
+
+    if (!game) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+
+    // Reset the game state
+    game.gameState.board = [
+      ["", "", ""],
+      ["", "", ""],
+      ["", "", ""],
+    ];
+    game.gameState.winnerId = null;
+    game.gameState.currentPlayerId = game.gameState.hostId; // Host starts
+
+    notifyGateway([{ event: "game:state_update", data: game }]);
+
+    res.status(200).json(game);
+  } catch (error) {
+    console.error("Error in resetGame:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
