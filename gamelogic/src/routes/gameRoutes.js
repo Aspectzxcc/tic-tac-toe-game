@@ -8,6 +8,8 @@ router.post('/:gameId/move', gameController.calculateMove);
 
 router.post('/create', gameController.createGame);
 
+router.post('/:gameId/check', gameController.checkWinner);
+
 router.get('/',(req, res) =>{
   res.send(gameState)
 })

@@ -1,5 +1,6 @@
 ### Create a new game
-POST http://localhost:3000/api/game/create
+@baseUrl = http://localhost:3002
+POST {{baseUrl}}/api/game/create
 Content-Type: application/json
 
 {
@@ -8,7 +9,7 @@ Content-Type: application/json
   "roomId": "room123"
 }
 ### Make a move in a game
-POST http://localhost:3000/api/game/game-509srsome/move
+POST {{baseUrl}}/api/game/game-iuhc79lnw/move
 Content-Type: application/json
 
 {
