@@ -5,3 +5,4 @@ const gameClient = axios.create({
 });
 
 export const getGames = () => gameClient.get("/api/game");
+export const getGameById = (gameId: string) => gameClient.get(`/api/game/${gameId}`);

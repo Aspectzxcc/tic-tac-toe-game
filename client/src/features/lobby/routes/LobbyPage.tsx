@@ -3,7 +3,6 @@ import { Header } from "../components/Header";
 import { OnlinePlayers } from "../components/OnlinePlayers";
 import { PlayerStats } from "../components/PlayerStats";
 import { useSocket } from "@/context/SocketContext";
-import { useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
 
 interface LobbyLoaderData {
@@ -12,16 +11,7 @@ interface LobbyLoaderData {
 
 export function LobbyPage() {
   const { initialRooms } = useLoaderData() as LobbyLoaderData;
-  const { socket, isConnected } = useSocket();
-
-  useEffect(() => {
-    if (socket) {
-      // Your existing socket logic can remain
-      return () => {
-        socket.off("some_event");
-      };
-    }
-  }, [socket]);
+  const { isConnected } = useSocket();
 
   return (
     <div className="bg-background min-h-screen p-8 font-sans">
