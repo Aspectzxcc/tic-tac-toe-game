@@ -37,7 +37,7 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("game:created", (updatedRooms: Room[]) => {
+    socket.on("games:updated", (updatedRooms: Room[]) => {
       console.log("Received room update from server:", updatedRooms);
       setRooms(updatedRooms);
     });

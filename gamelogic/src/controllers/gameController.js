@@ -46,12 +46,13 @@ exports.createGame = (req, res) => {
           ["", "", ""],
         ],
         players: { [playerId]: "X" },
+        host: playerId,
         currentPlayer: playerId,
         winner: null,
       },
     };
 
-    notifyGateway("game:created", Object.values(games));
+    notifyGateway("games:updated", Object.values(games));
 
     console.log(`Game created with ID: ${gameId}`);
 
@@ -83,7 +84,7 @@ exports.joinGame = (req, res) => {
       : "X";
     games[gameId].gameState.players[playerId] = symbol;
 
-    notifyGateway("game:joined", Object.values(games));
+    notifyGateway("games:updated", Object.values(games));
     
     res.status(200).json({ gameState: games[gameId].gameState });
   } catch (error) {
