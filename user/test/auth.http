@@ -1,0 +1,74 @@
+### Variables
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### Register a new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "username": "player1",
+  "password": "a-strong-password"
+}
+
+### Register another user for testing
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "username": "testuser2",
+  "password": "another-password123"
+}
+
+### Login with first user
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "player1",
+  "password": "a-strong-password"
+}
+
+### Login with second user
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "testuser2",
+  "password": "another-password123"
+}
+
+### Test with invalid credentials (should fail)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "player1",
+  "password": "wrong-password"
+}
+
+### Test with non-existent user (should fail)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "nonexistent",
+  "password": "any-password"
+}
+
+### Test duplicate registration (should fail)
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "username": "player1",
+  "password": "different-password"
+}
+
+### Test registration with missing fields (should fail)
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "username": "incomplete"
+}

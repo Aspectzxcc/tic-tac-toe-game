@@ -4,9 +4,9 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    
-
-   toJSON: {
+  },
+  {
+    toJSON: {
         transform: function(doc, ret) {
             ret.id = ret._id
             delete ret._id
