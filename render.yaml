@@ -1,3 +1,6 @@
+# render.yaml - CORRECTED VERSION
+
+# The 'services' block is only for dynamic applications (your backends)
 services:
   # 1. User Service
   - type: web
@@ -8,8 +11,6 @@ services:
     startCommand: "node server.js"
     plan: free
     envVars:
-      # Transcribed from user/.env
-      # The value comes from a secure Secret File, not plain text
       - key: MONGO_URI
         fromSecretFile: /etc/secrets/mongo_uri
 
@@ -22,9 +23,6 @@ services:
     startCommand: "node server.js"
     plan: free
     envVars:
-      # Transcribed from gamelogic/.env
-      # Render provides an internal, fast URL for backend services to talk to each other.
-      # The port 10000 is standard for Render's internal services.
       - key: GATEWAY_URL
         value: http://gateway-service:10000
 
@@ -38,27 +36,22 @@ services:
     plan: free
     healthCheckPath: /
     envVars:
-      # Transcribed from gateway/.env
-      # This also uses Render's internal service discovery.
       - key: GAMELOGIC_URL
         value: http://gamelogic-service:10000/api/game
 
+staticSites:
   # 4. Client Frontend
-  - type: static
-    name: tic-tac-pro-client
+  - name: tic-tac-pro-client
     rootDir: client
     buildCommand: "npm install && npm run build"
     publishDir: dist
-    plan: free
-    # This automatically handles React Router's client-side routing.
+    # The 'plan' key is not needed for free static sites
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
-      # Transcribed from client/.env.local
-      # For the frontend, we must use the public URLs.
-      # Render automatically substitutes these values at build time.
+      # The value substitution works exactly the same way here
       - key: VITE_USER_API_URL
         value: ${{ services.user-service.url }}
       - key: VITE_GAMELOGIC_API_URL
