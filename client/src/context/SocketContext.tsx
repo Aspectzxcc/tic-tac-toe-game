@@ -1,5 +1,14 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+// client/src/context/SocketContext.tsx
+
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import io, { Socket } from "socket.io-client";
+import { useLocation } from "react-router-dom";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -11,44 +20,47 @@ const SocketContext = createContext<SocketContextType>({
   isConnected: false,
 });
 
-export const useSocket = () => {
-  return useContext(SocketContext);
-};
+export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
+
+  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    if (token && !socket) {
-      const newSocket = io("http://localhost:3001", {
-        auth: {
-          token: token,
-        },
+    if (token && !socketRef.current) {
+      console.log("Token found, attempting to connect socket...");
+      socketRef.current = io("http://localhost:3001", {
+        auth: { token },
       });
 
-      newSocket.on("connect", () => {
-        console.log("Socket connected:", newSocket.id);
+      socketRef.current.on("connect", () => {
+        console.log("Socket connected!");
         setIsConnected(true);
       });
 
-      newSocket.on("disconnect", () => {
-        console.log("Socket disconnected");
+      socketRef.current.on("disconnect", () => {
+        console.log("Socket disconnected.");
         setIsConnected(false);
       });
 
-      setSocket(newSocket);
+      socketRef.current.on("connect_error", (err) => {
+        console.error("Socket connection error:", err.message);
+      });
+    }
+    else if (!token && socketRef.current) {
+      console.log("No token found, disconnecting socket.");
+      socketRef.current.disconnect();
+      socketRef.current = null;
     }
 
-    return () => {
-      socket?.disconnect();
-    };
-  }, [socket]);
+  }, [location.pathname]);
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected }}>
+    <SocketContext.Provider value={{ socket: socketRef.current, isConnected }}>
       {children}
     </SocketContext.Provider>
   );

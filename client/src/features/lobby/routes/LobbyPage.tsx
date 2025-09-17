@@ -10,10 +10,7 @@ export function LobbyPage() {
 
   useEffect(() => {
     if (socket) {
-      socket.on("some_event", (data) => {
-        console.log("Received some_event:", data);
-      });
-
+      
       return () => {
         socket.off("some_event");
       };
