@@ -3,7 +3,7 @@ const notifyGateway = require("../client/gatewayClient");
 
 exports.getGames = (req, res) => {
   try {
-    res.status(200).json(games);
+    res.status(200).json(Object.values(games));
   } catch (error) {
     console.error("Error in getGames:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -19,7 +19,7 @@ exports.getGameById = (req, res) => {
     res.status(200).json(games[gameId]);
   } catch (error) {
     console.error("Error in getGameById:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: "Internal Server aError" });
   }
 };
 
