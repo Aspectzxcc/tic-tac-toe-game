@@ -4,9 +4,10 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    
+  },
 
-   toJSON: {
+  {
+    toJSON: {
         transform: function(doc, ret) {
             ret.id = ret._id
             delete ret._id
@@ -17,7 +18,7 @@ const userSchema = new mongoose.Schema({
 })
 // Hash password before saving
 
-UserSchema.pre('save', async function (next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next(); // Only hash if the password is modified
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
@@ -25,7 +26,7 @@ UserSchema.pre('save', async function (next) {
 });
 
 // Hash password before updating
-UserSchema.pre('findOneAndUpdate', async function (next) {
+userSchema.pre('findOneAndUpdate', async function (next) {
   const update = this.getUpdate();
   if (update.password) {
     const salt = await bcrypt.genSalt(10);
@@ -34,4 +35,4 @@ UserSchema.pre('findOneAndUpdate', async function (next) {
   next();
 });
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model('User', userSchema);
