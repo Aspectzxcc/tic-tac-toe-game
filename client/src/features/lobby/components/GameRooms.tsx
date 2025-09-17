@@ -9,40 +9,38 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useSocket } from "@/context/SocketContext";
 import { useNavigate } from "react-router-dom";
 
-const rooms = [
-  {
-    id: "full-room",
-    name: "Beginner Room",
-    difficulty: "Easy",
-    players: "2/2",
-    status: "Full",
-  },
-  {
-    id: "pro-arena",
-    name: "Pro Arena",
-    difficulty: "Hard",
-    players: "1/2",
-    status: "Available",
-  },
-  {
-    id: "quick-match",
-    name: "Quick Match",
-    difficulty: "Medium",
-    players: "0/2",
-    status: "Available",
-  },
-];
+interface Room {
+  id: string;
+  name: string;
+  difficulty: string;
+  players: string;
+  status: string;
+}
 
 export function GameRooms() {
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const { socket } = useSocket();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("game:created", (updatedRooms: Room[]) => {
+      console.log("Received room update from server:", updatedRooms);
+      setRooms(updatedRooms);
+    });
+    
+    return () => {
+      socket.off("game:created");
+    };
+  }, [socket]);
+  
   const handleCreateRoom = () => {
     if (!socket) return;
 

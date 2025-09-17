@@ -1,4 +1,5 @@
-games = {}
+const { games } = require("../data/games");
+const notifyGateway = require("../client/gatewayClient");
 
 exports.getGames = (req, res) => {
   try {
@@ -30,6 +31,8 @@ exports.createGame = (req, res) => {
         winner: null,
       },
     };
+
+    notifyGateway("game:created", { game: games[gameId] });
 
     res.status(201).json({ gameId });
   } catch (error) {
@@ -78,6 +81,8 @@ exports.calculateMove = (req, res) => {
       (id) => id !== games[gameId].gameState.currentPlayer
     );
     games[gameId].gameState.currentPlayer = nextPlayer;
+
+    notifyGateway("game:moved", { gameId, gameState: games[gameId].gameState });
 
     res.status(200).json({ gameState: games[gameId].gameState });
   } catch (error) {
