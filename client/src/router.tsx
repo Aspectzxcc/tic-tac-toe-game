@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { Suspense } from 'react';
 import App from './App';
 import { AuthPage } from './features/auth/routes/AuthPage';
+import { LoginForm } from './features/auth/components/LoginForm';
+import { RegisterForm } from './features/auth/components/RegisterForm';
 import { LobbyPage } from './features/lobby/routes/LobbyPage';
 import { GamePage } from './features/game/routes/GamePage';
 
@@ -12,11 +14,16 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/auth" replace />,
+        element: <Navigate to="/auth/login" replace />,
       },
       {
         path: 'auth',
         element: <AuthPage />,
+        children: [
+          { index: true, element: <Navigate to="login" replace /> },
+          { path: 'login', element: <LoginForm /> },
+          { path: 'register', element: <RegisterForm /> },
+        ],
       },
       {
         path: 'lobby',

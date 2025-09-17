@@ -1,11 +1,12 @@
 import { AwardIcon, UsersIcon, ZapIcon } from "@/components/icons/FeatureIcons";
 import { TrophyIcon } from "@/components/icons/TrophyIcon";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LoginForm } from "../components/LoginForm";
-import { RegisterForm } from "../components/RegisterForm";
+import { Outlet, Link, useLocation } from "react-router-dom";
 
 export function AuthPage() {
+  const location = useLocation();
+  const isRegister = location.pathname.endsWith("/register");
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4">
       <div className="text-center mb-12">
@@ -35,24 +36,31 @@ export function AuthPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="login" className="w-full max-w-md">
-        <Card className="shadow-2xl rounded-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Join the Game</CardTitle>
-            <CardDescription>Enter your details to start playing</CardDescription>
-          </CardHeader>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
-          </TabsList>
-          <TabsContent value="login">
-            <LoginForm />
-          </TabsContent>
-          <TabsContent value="register">
-            <RegisterForm />
-          </TabsContent>
-        </Card>
-      </Tabs>
+      <Card className="shadow-2xl rounded-xl w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Join the Game</CardTitle>
+          <CardDescription>Enter your details to start playing</CardDescription>
+        </CardHeader>
+        <div className="grid w-full grid-cols-2 mb-4">
+          <Link
+            to="/auth/login"
+            className={`text-center py-2 rounded-tl-xl font-semibold transition-colors ${
+              !isRegister ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            }`}
+          >
+            Login
+          </Link>
+          <Link
+            to="/auth/register"
+            className={`text-center py-2 rounded-tr-xl font-semibold transition-colors ${
+              isRegister ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            }`}
+          >
+            Register
+          </Link>
+        </div>
+        <Outlet />
+      </Card>
     </div>
   );
 }
