@@ -31,6 +31,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
+    const API_URL = import.meta.env.VITE_GATEWAY_API_BASE_URL || "http://localhost:3001";
+
     if (token && !socketRef.current) {
       console.log("Token found, attempting to connect socket...");
       socketRef.current = io("http://localhost:3001", {
