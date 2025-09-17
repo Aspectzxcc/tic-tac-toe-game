@@ -1,11 +1,17 @@
 const express = require('express');
 const app = express();
+const mongoose = require('mongoose');
 const routes = require('./routes/index');
 
+require('dotenv').config();
 
+// Connect to MongoDB
+mongoose.connect("mongodb://localhost:27017/tic-tac-toe").then(() => {
+  console.log('Connected to database');
+})
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }))
 
 //routes
 app.use('/api', routes);
