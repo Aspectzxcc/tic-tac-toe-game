@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CrownIcon, LogOutIcon } from "@/components/icons/GameIcons";
+import { Form } from "react-router-dom";
 
 export function Header() {
   const username = "a!"; // Replace with dynamic user data
@@ -21,10 +22,12 @@ export function Header() {
           </div>
         </div>
       </div>
-      <Button variant="outline">
-        <LogOutIcon className="mr-2 h-4 w-4" />
-        Logout
-      </Button>
+      <Form method="post" action="/auth/logout" replace>
+        <Button variant="outline" type="submit">
+          <LogOutIcon className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
+      </Form>
     </header>
   );
 }

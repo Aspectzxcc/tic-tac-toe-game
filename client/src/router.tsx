@@ -7,7 +7,7 @@ import { RegisterForm } from './features/auth/components/RegisterForm';
 import { LobbyPage } from './features/lobby/routes/LobbyPage';
 import { GamePage } from './features/game/routes/GamePage';
 import { loginLoader } from './features/auth/loaders';
-import { loginAction, registerAction } from './features/auth/actions';
+import { loginAction, registerAction, logoutAction } from './features/auth/actions';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 const router = createBrowserRouter([
@@ -35,6 +35,10 @@ const router = createBrowserRouter([
             element: <RegisterForm />,
             action: registerAction
            },
+           {
+            path: 'logout',
+            action: logoutAction
+           }
         ],
       },
       {

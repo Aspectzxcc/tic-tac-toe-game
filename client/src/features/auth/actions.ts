@@ -46,3 +46,9 @@ export async function registerAction({ request }: { request: Request }) {
     };
   }
 }
+
+export async function logoutAction() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  return redirect("/auth/login");
+}
