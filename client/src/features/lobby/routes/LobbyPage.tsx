@@ -1,5 +1,5 @@
 import { GameRooms } from "../components/GameRooms";
-import { Header } from "../components/Header";
+import { LobbyHeader } from "../components/LobbyHeader";
 import { OnlinePlayers } from "../components/OnlinePlayers";
 import { PlayerStats } from "../components/PlayerStats";
 import { useSocket } from "@/context/SocketContext";
@@ -14,9 +14,9 @@ export function LobbyPage() {
   const { isConnected } = useSocket();
 
   return (
-    <div className="bg-background min-h-screen p-8 font-sans">
+    <div className="bg-background min-h-screen p-8 font-  sans">
       <div className="max-w-7xl mx-auto">
-        <Header />
+        <LobbyHeader />
         <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column */}
           <div className="lg:col-span-1 space-y-8">

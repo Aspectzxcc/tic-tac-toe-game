@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CrownIcon, LogOutIcon } from "@/components/icons/GameIcons";
 import { Form } from "react-router-dom";
 
-export function Header() {
+export function LobbyHeader() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRank = "Gold";
 

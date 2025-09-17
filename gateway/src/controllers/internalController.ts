@@ -18,7 +18,9 @@ export const broadcastEvent = (req: Request, res: Response) => {
 
   // For game-specific events, emit to a room with the gameId
   if (
-    (event === "game:state_update" || event === "game:ended") &&
+    (event === "game:state_update" ||
+      event === "game:ended" ||
+      event === "game:player_left") &&
     data.gameId
   ) {
     io.to(data.gameId).emit(event, data);

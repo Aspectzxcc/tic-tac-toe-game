@@ -43,8 +43,6 @@ export function GamePage() {
   useEffect(() => {
     if (!socket || !gameId) return;
 
-    socket.emit("room:join", gameId);
-
     const handleStateUpdate = (updatedGame: Game) => {
       if (updatedGame.gameId === gameId) {
         setGame(updatedGame);
@@ -55,7 +53,6 @@ export function GamePage() {
 
     return () => {
       socket.off("game:state_update", handleStateUpdate);
-      socket.emit("room:leave", gameId);
     };
   }, [socket, gameId]);
 

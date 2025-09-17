@@ -1,8 +1,7 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
-import { join } from 'node:path';
 import registerSocketHandlers from './socket/index.js';
 import routes from './routes/index.js';
 
@@ -19,10 +18,5 @@ app.use(express.json());
 app.use(cors());
 
 app.use('/api', routes);
-
-// test UI
-app.get('/', (req: Request, res: Response) => {
-  res.sendFile(join(process.cwd(), 'index.html'));
-});
 
 registerSocketHandlers(io);

@@ -1,12 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon, RefreshCwIcon } from "@/components/icons/GameIcons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { leaveGame } from "@/api/gamelogic";
 
 export function GameHeader() {
+  const navigate = useNavigate();
+  const { gameId } = useParams<{ gameId: string }>();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const handleLeaveGame = async () => {
+    if (!gameId || !user.id) {
+      navigate("/lobby");
+      return;
+    }
+
+    try {
+      await leaveGame(gameId, user.id);
+      navigate("/lobby");
+    } catch (error) {
+      console.error("Failed to leave game:", error);
+      navigate("/lobby");
+    }
+  };
+
   return (
     <header className="flex items-center justify-between w-full mb-8">
       <Link to="/lobby">
-        <Button variant="outline">
+        <Button variant="outline" onClick={handleLeaveGame}>
           <ArrowLeftIcon className="mr-2 h-4 w-4" />
           Back to Lobby
         </Button>

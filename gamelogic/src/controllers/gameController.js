@@ -168,6 +168,8 @@ exports.leaveGame = (req, res) => {
       return res.status(400).json({ error: "Player not in this game" });
     }
 
+    console.log(`Player ${playerId} is leaving game ${gameId}`);
+
     // If the host leaves, the game is over.
     if (game.gameState.hostId === playerId) {
       delete games[gameId];
@@ -195,6 +197,10 @@ exports.leaveGame = (req, res) => {
 
       notifyGateway("games:updated", Object.values(games));
       notifyGateway("game:state_update", game);
+      notifyGateway("game:player_left", {
+        gameId,
+        message: "A player has left, waiting for a new player to join.",
+      });
 
       return res
         .status(200)

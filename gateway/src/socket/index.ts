@@ -5,6 +5,7 @@ import {
 } from "./controller/disconnectController.js";
 import { auth } from "./middleware/auth.js";
 import { addUser, broadcastOnlinePlayers } from "./onlinePlayersManager.js";
+import { leaveRoom } from "./controller/leaveController.js";
 
 export default function registerSocketHandlers(io: Server) {
   io.use(auth);
@@ -25,15 +26,7 @@ export default function registerSocketHandlers(io: Server) {
       broadcastOnlinePlayers(io);
     });
 
-    socket.on("room:join", (gameId) => {
-      socket.join(gameId);
-      console.log(`${user.username} joined room: ${gameId}`);
-    });
-
-    socket.on("room:leave", (gameId) => {
-      socket.leave(gameId);
-      console.log(`${user.username} left room: ${gameId}`);
-    });
+    socket.on("room:leave", (gameId) => leaveRoom(io, socket, gameId));
 
     socket.on("disconnect", () => handleDisconnect(io, socket));
   });
