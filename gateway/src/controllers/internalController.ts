@@ -2,42 +2,48 @@ import { Request, Response } from "express";
 import { io } from "../app.js";
 import { broadcastOnlinePlayers } from "../socket/onlinePlayersManager.js";
 
+const eventHandlers: Record<string, (data: any) => void> = {
+  "game:state_update": (data) => {
+    if (data.gameId) io.to(data.gameId).emit("game:state_update", data);
+  },
+  "game:ended": (data) => {
+    if (data.gameId) io.to(data.gameId).emit("game:ended", data);
+  },
+  "game:player_left": (data) => {
+    if (data.gameId) io.to(data.gameId).emit("game:player_left", data);
+  },
+  "games:updated": (data) => {
+    io.emit("games:updated", data);
+    broadcastOnlinePlayers(io);
+  },
+};
+
 export const broadcastEvent = (req: Request, res: Response) => {
-  const { event, data } = req.body;
+  const { events } = req.body;
   const secret = req.headers["x-internal-secret"];
 
   if (secret !== "your-super-secret-key") {
     return res.status(401).send("Unauthorized");
   }
 
-  if (!event) {
-    return res.status(400).send("Missing event");
+  if (!events || !Array.isArray(events)) {
+    return res.status(400).send("Missing or invalid events array");
   }
 
-  console.log(`Received internal broadcast request. Event: ${event}`);
+  console.log(
+    `Received internal broadcast request. Events: ${events
+      .map((e: any) => e.event)
+      .join(", ")}`
+  );
 
-  // For game-specific events, emit to a room with the gameId
-  if (
-    (event === "game:state_update" ||
-      event === "game:ended" ||
-      event === "game:player_left") &&
-    data.gameId
-  ) {
-    io.to(data.gameId).emit(event, data);
-
-    // Also broadcast the general list of games if the state changed
-    if (event === "game:state_update") {
-      io.emit("games:updated", data.allGames);
+  for (const { event, data } of events) {
+    const handler = eventHandlers[event];
+    if (handler) {
+      handler(data);
+    } else {
+      io.emit(event, data);
     }
-  } else {
-    // For general events, broadcast to everyone
-    io.emit(event, data);
   }
 
-  // If the event is a general game list update, also update the online player list with their statuses
-  if (event === "games:updated") {
-    broadcastOnlinePlayers(io);
-  }
-
-  res.status(200).json({ message: "Broadcast successful" });
+  res.status(200).json({ message: "Broadcasted all events" });
 };

@@ -111,7 +111,9 @@ exports.createGame = (req, res) => {
       },
     };
 
-    notifyGateway("games:updated", Object.values(games));
+    notifyGateway([
+      { event: "games:updated", data: Object.values(games) }
+    ]);
     res.status(201).json(games[gameId]);
   } catch (error) {
     console.error("Error in createGame:", error);
@@ -142,11 +144,10 @@ exports.joinGame = (req, res) => {
       symbol,
     });
 
-    notifyGateway("games:updated", Object.values(games));
-    notifyGateway("game:state_update", {
-      ...game,
-      allGames: Object.values(games),
-    });
+    notifyGateway([
+      { event: "games:updated", data: Object.values(games) },
+      { event: "game:state_update", data: { ...game, allGames: Object.values(games) } }
+    ]);
 
     res.status(200).json(game);
   } catch (error) {
@@ -168,43 +169,36 @@ exports.leaveGame = (req, res) => {
       return res.status(400).json({ error: "Player not in this game" });
     }
 
-    console.log(`Player ${playerId} is leaving game ${gameId}`);
+    let events = [];
 
     // If the host leaves, the game is over.
     if (game.gameState.hostId === playerId) {
       delete games[gameId];
-      notifyGateway("games:updated", Object.values(games));
-      notifyGateway("game:ended", {
-        gameId,
-        message: "Game ended as host left",
-      });
+      events.push(
+        { event: "games:updated", data: Object.values(games) },
+        { event: "game:ended", data: { gameId, message: "Game ended as host left" } }
+      );
+      notifyGateway(events);
       return res.status(200).json({ message: "Game ended as host left" });
-    }
-
-    // If the second player leaves, reset the game but keep the room.
-    else {
+    } else {
       game.gameState.players = game.gameState.players.filter(
         (p) => p.id !== playerId
       );
-      // Reset the board and game state
       game.gameState.board = [
         ["", "", ""],
         ["", "", ""],
         ["", "", ""],
       ];
       game.gameState.winnerId = null;
-      game.gameState.currentPlayerId = game.gameState.hostId; // Host gets the turn back
+      game.gameState.currentPlayerId = game.gameState.hostId;
 
-      notifyGateway("games:updated", Object.values(games));
-      notifyGateway("game:state_update", game);
-      notifyGateway("game:player_left", {
-        gameId,
-        message: "A player has left, waiting for a new player to join.",
-      });
-
-      return res
-        .status(200)
-        .json({ message: "Player left, room is now open." });
+      events.push(
+        { event: "games:updated", data: Object.values(games) },
+        { event: "game:state_update", data: game },
+        { event: "game:player_left", data: { gameId, message: "A player has left, waiting for a new player to join." } }
+      );
+      notifyGateway(events);
+      return res.status(200).json({ message: "Player left, room is now open." });
     }
   } catch (error) {
     console.error("Error in leaveGame:", error);
@@ -258,7 +252,9 @@ exports.makeMove = (req, res) => {
       game.gameState.currentPlayerId = nextPlayer ? nextPlayer.id : null;
     }
 
-    notifyGateway("game:state_update", game);
+    notifyGateway([
+      { event: "game:state_update", data: game }
+    ]);
 
     res.status(200).json(game);
   } catch (error) {

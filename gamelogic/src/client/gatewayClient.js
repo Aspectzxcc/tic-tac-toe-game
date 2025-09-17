@@ -2,12 +2,12 @@ const axios = require("axios");
 
 const GATEWAY_URL = "http://localhost:3001";
 
-async function notifyGateway(event, data) {
+async function notifyGateway(events) {
   try {
-    console.log(`Notifying gateway with event '${event}'`);
+    console.log(`Notifying gateway with events:`, events.map((e) => e.event));
     await axios.post(
       `${GATEWAY_URL}/api/internal/broadcast`,
-      { event, data },
+      { events },
       {
         headers: {
           "Content-Type": "application/json",
