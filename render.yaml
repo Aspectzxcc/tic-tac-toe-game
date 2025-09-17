@@ -1,6 +1,5 @@
-# render.yaml - CORRECTED VERSION
+# render.yaml - FINAL CORRECTED VERSION
 
-# The 'services' block is only for dynamic applications (your backends)
 services:
   # 1. User Service
   - type: web
@@ -39,19 +38,17 @@ services:
       - key: GAMELOGIC_URL
         value: http://gamelogic-service:10000/api/game
 
-staticSites:
   # 4. Client Frontend
   - name: tic-tac-pro-client
+    type: static_site
     rootDir: client
     buildCommand: "npm install && npm run build"
     publishDir: dist
-    # The 'plan' key is not needed for free static sites
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
-      # The value substitution works exactly the same way here
       - key: VITE_USER_API_URL
         value: ${{ services.user-service.url }}
       - key: VITE_GAMELOGIC_API_URL
