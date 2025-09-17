@@ -19,4 +19,8 @@ app.use(cors());
 
 app.use('/api', routes);
 
+app.use('/',(req, res)=>{
+  res.send("hello world")
+})
+
 registerSocketHandlers(io);
