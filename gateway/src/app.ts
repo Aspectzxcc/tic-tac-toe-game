@@ -1,17 +1,24 @@
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { join } from 'node:path';
 import registerSocketHandlers from './socket/index.js';
+import routes from './routes/index.js';
 
 const app = express();
-const server = createServer(app);
-const io = new Server(server, {
+export const server = createServer(app);
+export const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
   }
 });
+
+app.use(express.json());
+app.use(cors());
+
+app.use('/api', routes);
 
 // test UI
 app.get('/', (req: Request, res: Response) => {
@@ -19,5 +26,3 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 registerSocketHandlers(io);
-
-export default server;
