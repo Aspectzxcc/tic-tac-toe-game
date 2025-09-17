@@ -1,54 +1,55 @@
 const { games } = require("../data/games");
 const notifyGateway = require("../client/gatewayClient");
 
-const getWinningCombinations = () => [
-  // Rows
-  [
-    [0, 0],
-    [0, 1],
-    [0, 2],
-  ],
-  [
-    [1, 0],
-    [1, 1],
-    [1, 2],
-  ],
-  [
-    [2, 0],
-    [2, 1],
-    [2, 2],
-  ],
-  // Columns
-  [
-    [0, 0],
-    [1, 0],
-    [2, 0],
-  ],
-  [
-    [0, 1],
-    [1, 1],
-    [2, 1],
-  ],
-  [
-    [0, 2],
-    [1, 2],
-    [2, 2],
-  ],
-  // Diagonals
-  [
-    [0, 0],
-    [1, 1],
-    [2, 2],
-  ],
-  [
-    [0, 2],
-    [1, 1],
-    [2, 0],
-  ],
-];
+// ... (checkWinner function and other exports remain the same) ...
 
 const checkWinner = (board) => {
-  for (const combination of getWinningCombinations()) {
+  const winningCombinations = [
+    // Rows
+    [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+    ],
+    [
+      [1, 0],
+      [1, 1],
+      [1, 2],
+    ],
+    [
+      [2, 0],
+      [2, 1],
+      [2, 2],
+    ],
+    // Columns
+    [
+      [0, 0],
+      [1, 0],
+      [2, 0],
+    ],
+    [
+      [0, 1],
+      [1, 1],
+      [2, 1],
+    ],
+    [
+      [0, 2],
+      [1, 2],
+      [2, 2],
+    ],
+    // Diagonals
+    [
+      [0, 0],
+      [1, 1],
+      [2, 2],
+    ],
+    [
+      [0, 2],
+      [1, 1],
+      [2, 0],
+    ],
+  ];
+  for (const combination of winningCombinations) {
     const [a, b, c] = combination;
     if (
       board[a[0]][a[1]] &&
@@ -142,7 +143,10 @@ exports.joinGame = (req, res) => {
     });
 
     notifyGateway("games:updated", Object.values(games));
-    notifyGateway("game:state_update", game);
+    notifyGateway("game:state_update", {
+      ...game,
+      allGames: Object.values(games),
+    });
 
     res.status(200).json(game);
   } catch (error) {
@@ -157,10 +161,14 @@ exports.leaveGame = (req, res) => {
     const { playerId } = req.body;
     const game = games[gameId];
 
-    if (!game) return res.status(404).json({ error: "Game not found" });
-    if (!playerId || !game.gameState.players.some((p) => p.id === playerId))
-      return res.status(400).json({ error: "Player not in the game" });
+    if (!game) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+    if (!playerId || !game.gameState.players.some((p) => p.id === playerId)) {
+      return res.status(400).json({ error: "Player not in this game" });
+    }
 
+    // If the host leaves, the game is over.
     if (game.gameState.hostId === playerId) {
       delete games[gameId];
       notifyGateway("games:updated", Object.values(games));
@@ -171,17 +179,27 @@ exports.leaveGame = (req, res) => {
       return res.status(200).json({ message: "Game ended as host left" });
     }
 
-    game.gameState.players = game.gameState.players.filter(
-      (p) => p.id !== playerId
-    );
-    if (game.gameState.currentPlayerId === playerId) {
-      game.gameState.currentPlayerId = game.gameState.players[0]?.id || null;
+    // If the second player leaves, reset the game but keep the room.
+    else {
+      game.gameState.players = game.gameState.players.filter(
+        (p) => p.id !== playerId
+      );
+      // Reset the board and game state
+      game.gameState.board = [
+        ["", "", ""],
+        ["", "", ""],
+        ["", "", ""],
+      ];
+      game.gameState.winnerId = null;
+      game.gameState.currentPlayerId = game.gameState.hostId; // Host gets the turn back
+
+      notifyGateway("games:updated", Object.values(games));
+      notifyGateway("game:state_update", game);
+
+      return res
+        .status(200)
+        .json({ message: "Player left, room is now open." });
     }
-
-    notifyGateway("games:updated", Object.values(games));
-    notifyGateway("game:state_update", game);
-
-    res.status(200).json({ message: "Player left the game" });
   } catch (error) {
     console.error("Error in leaveGame:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -195,6 +213,14 @@ exports.makeMove = (req, res) => {
     const game = games[gameId];
 
     if (!game) return res.status(400).json({ error: "Invalid gameId" });
+
+    // Prevent moves until two players have joined
+    if (game.gameState.players.length < 2) {
+      return res
+        .status(400)
+        .json({ error: "Waiting for a second player to join." });
+    }
+
     if (!move || move.row === undefined || move.col === undefined)
       return res.status(400).json({ error: "Invalid move data" });
     if (game.gameState.winnerId)
