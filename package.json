@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run build --prefix gateway",
-    "start": "concurrently \"npm:start --prefix user\" \"npm:start --prefix gamelogic\" \"npm:start --prefix gateway\""
+    "start": "concurrently \"npm:start --prefix user\" \"npm:start --prefix gamelogic\" \"npm:start --prefix gateway\"",
+    "install": "npm install --prefix user && npm install --prefix gamelogic && npm install --prefix gateway"
   },
   "repository": {
     "type": "git",
