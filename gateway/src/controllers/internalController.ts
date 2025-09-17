@@ -16,10 +16,24 @@ export const broadcastEvent = (req: Request, res: Response) => {
 
   console.log(`Received internal broadcast request. Event: ${event}`);
 
-  io.emit(event, data);
+  // For game-specific events, emit to a room with the gameId
+  if (
+    (event === "game:state_update" || event === "game:ended") &&
+    data.gameId
+  ) {
+    io.to(data.gameId).emit(event, data);
 
-  // If the event is a game update, also update the online player list with their statuses
-  if (event === 'games:updated') {
+    // Also broadcast the general list of games if the state changed
+    if (event === "game:state_update") {
+      io.emit("games:updated", data.allGames);
+    }
+  } else {
+    // For general events, broadcast to everyone
+    io.emit(event, data);
+  }
+
+  // If the event is a general game list update, also update the online player list with their statuses
+  if (event === "games:updated") {
     broadcastOnlinePlayers(io);
   }
 

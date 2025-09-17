@@ -1,6 +1,69 @@
 const { games } = require("../data/games");
 const notifyGateway = require("../client/gatewayClient");
 
+const getWinningCombinations = () => [
+  // Rows
+  [
+    [0, 0],
+    [0, 1],
+    [0, 2],
+  ],
+  [
+    [1, 0],
+    [1, 1],
+    [1, 2],
+  ],
+  [
+    [2, 0],
+    [2, 1],
+    [2, 2],
+  ],
+  // Columns
+  [
+    [0, 0],
+    [1, 0],
+    [2, 0],
+  ],
+  [
+    [0, 1],
+    [1, 1],
+    [2, 1],
+  ],
+  [
+    [0, 2],
+    [1, 2],
+    [2, 2],
+  ],
+  // Diagonals
+  [
+    [0, 0],
+    [1, 1],
+    [2, 2],
+  ],
+  [
+    [0, 2],
+    [1, 1],
+    [2, 0],
+  ],
+];
+
+const checkWinner = (board) => {
+  for (const combination of getWinningCombinations()) {
+    const [a, b, c] = combination;
+    if (
+      board[a[0]][a[1]] &&
+      board[a[0]][a[1]] === board[b[0]][b[1]] &&
+      board[a[0]][a[1]] === board[c[0]][c[1]]
+    ) {
+      return board[a[0]][a[1]]; // return 'X' or 'O'
+    }
+  }
+  if (board.flat().every((cell) => cell)) {
+    return "Tie";
+  }
+  return null;
+};
+
 exports.getGames = (req, res) => {
   try {
     res.status(200).json(Object.values(games));
@@ -25,18 +88,12 @@ exports.getGameById = (req, res) => {
 
 exports.createGame = (req, res) => {
   try {
-    const { hostId } = req.body;
-    if (!hostId) {
+    const { hostId, hostUsername } = req.body;
+    if (!hostId || !hostUsername) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     const gameId = Math.random().toString(36).substring(2, 10);
-
-    if (games[gameId]) {
-      return res
-        .status(409)
-        .json({ error: "Game with this ID already exists." });
-    }
 
     games[gameId] = {
       gameId,
@@ -46,18 +103,15 @@ exports.createGame = (req, res) => {
           ["", "", ""],
           ["", "", ""],
         ],
-        players: { [hostId]: "X" },
-        host: hostId,
-        currentPlayer: hostId,
-        winner: null,
+        players: [{ id: hostId, username: hostUsername, symbol: "X" }],
+        hostId: hostId,
+        currentPlayerId: hostId,
+        winnerId: null,
       },
     };
 
     notifyGateway("games:updated", Object.values(games));
-
-    console.log(`Game created with ID: ${gameId}`);
-
-    res.status(201).json({ gameId });
+    res.status(201).json(games[gameId]);
   } catch (error) {
     console.error("Error in createGame:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -67,25 +121,30 @@ exports.createGame = (req, res) => {
 exports.joinGame = (req, res) => {
   try {
     const { gameId } = req.params;
-    const { playerId } = req.body;
-    if (!gameId || !games[gameId]) {
-      return res.status(404).json({ error: "Game not found" });
-    }
-    if (!playerId) {
-      return res.status(400).json({ error: "Missing playerId" });
-    }
-    if (Object.keys(games[gameId].gameState.players).length >= 2) {
+    const { playerId, playerUsername } = req.body;
+    const game = games[gameId];
+
+    if (!game) return res.status(404).json({ error: "Game not found" });
+    if (!playerId || !playerUsername)
+      return res.status(400).json({ error: "Missing player details" });
+    if (game.gameState.players.length >= 2)
       return res.status(400).json({ error: "Game is already full" });
-    }
-    if (games[gameId].gameState.players[playerId]) {
+    if (game.gameState.players.some((p) => p.id === playerId))
       return res.status(400).json({ error: "Player already in the game" });
-    }
-    const symbol = Object.values(games[gameId].gameState.players).includes("X") ? "O" : "X";
-    games[gameId].gameState.players[playerId] = symbol;
+
+    const symbol = game.gameState.players.some((p) => p.symbol === "X")
+      ? "O"
+      : "X";
+    game.gameState.players.push({
+      id: playerId,
+      username: playerUsername,
+      symbol,
+    });
 
     notifyGateway("games:updated", Object.values(games));
+    notifyGateway("game:state_update", game);
 
-    res.status(200).json({ gameId });
+    res.status(200).json(game);
   } catch (error) {
     console.error("Error in joinGame:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -96,28 +155,31 @@ exports.leaveGame = (req, res) => {
   try {
     const { gameId } = req.params;
     const { playerId } = req.body;
-    if (!gameId || !games[gameId]) {
-      return res.status(404).json({ error: "Game not found" });
-    }
+    const game = games[gameId];
 
-    if (!playerId || !games[gameId].gameState.players[playerId]) {
+    if (!game) return res.status(404).json({ error: "Game not found" });
+    if (!playerId || !game.gameState.players.some((p) => p.id === playerId))
       return res.status(400).json({ error: "Player not in the game" });
-    }
 
-    if (games[gameId].gameState.host === playerId) {
+    if (game.gameState.hostId === playerId) {
       delete games[gameId];
       notifyGateway("games:updated", Object.values(games));
+      notifyGateway("game:ended", {
+        gameId,
+        message: "Game ended as host left",
+      });
       return res.status(200).json({ message: "Game ended as host left" });
     }
 
-    delete games[gameId].gameState.players[playerId];
-
-    if (games[gameId].gameState.currentPlayer === playerId) {
-      const remainingPlayerId = Object.keys(games[gameId].gameState.players)[0];
-      games[gameId].gameState.currentPlayer = remainingPlayerId;
+    game.gameState.players = game.gameState.players.filter(
+      (p) => p.id !== playerId
+    );
+    if (game.gameState.currentPlayerId === playerId) {
+      game.gameState.currentPlayerId = game.gameState.players[0]?.id || null;
     }
 
     notifyGateway("games:updated", Object.values(games));
+    notifyGateway("game:state_update", game);
 
     res.status(200).json({ message: "Player left the game" });
   } catch (error) {
@@ -126,134 +188,49 @@ exports.leaveGame = (req, res) => {
   }
 };
 
-exports.calculateMove = (req, res) => {
+exports.makeMove = (req, res) => {
   try {
     const { gameId } = req.params;
     const { move, playerID } = req.body;
-
-    // Input validation
-    if (!gameId || !games[gameId]) {
-      return res.status(400).json({ error: "Invalid or missing gameId" });
-    }
-
-    if (!move || move.row === undefined || move.col === undefined) {
-      return res.status(400).json({ error: "Invalid move data" });
-    }
-
-    if (games[gameId].gameState.winner) {
-      return res.status(400).json({ error: "Game already concluded" });
-    }
-
-    if (games[gameId].gameState.board[move.row][move.col]) {
-      return res.status(400).json({ error: "Cell already occupied" });
-    }
-
-    if (games[gameId].gameState.currentPlayer !== playerID) {
-      return res.status(400).json({
-        error: `It's not your turn. Current player: ${
-          games[gameId].gameState.players[games[gameId].gameState.currentPlayer]
-        }`,
-      });
-    }
-
-    // Update board state
-    const playerSymbol = games[gameId].gameState.players[playerID];
-    games[gameId].gameState.board[move.row][move.col] = playerSymbol;
-
-    // Update current player
-    const playerList = Object.keys(games[gameId].gameState.players);
-    const nextPlayer = playerList.find(
-      (id) => id !== games[gameId].gameState.currentPlayer
-    );
-    games[gameId].gameState.currentPlayer = nextPlayer;
-
-    notifyGateway("game:moved", { gameId, gameState: games[gameId].gameState });
-
-    res.status(200).json({ gameState: games[gameId].gameState });
-  } catch (error) {
-    console.error("Error in calculateMove:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
-exports.checkWinner = (req, res) => {
-  try {
-    const { gameId } = req.params;
     const game = games[gameId];
-    const board = game.gameState.board;
 
-    const winningCombinations = [
-      // Rows
-      [
-        [0, 0],
-        [0, 1],
-        [0, 2],
-      ],
-      [
-        [1, 0],
-        [1, 1],
-        [1, 2],
-      ],
-      [
-        [2, 0],
-        [2, 1],
-        [2, 2],
-      ],
-      // Columns
-      [
-        [0, 0],
-        [1, 0],
-        [2, 0],
-      ],
-      [
-        [0, 1],
-        [1, 1],
-        [2, 1],
-      ],
-      [
-        [0, 2],
-        [1, 2],
-        [2, 2],
-      ],
-      // Diagonals
-      [
-        [0, 0],
-        [1, 1],
-        [2, 2],
-      ],
-      [
-        [0, 2],
-        [1, 1],
-        [2, 0],
-      ],
-    ];
+    if (!game) return res.status(400).json({ error: "Invalid gameId" });
+    if (!move || move.row === undefined || move.col === undefined)
+      return res.status(400).json({ error: "Invalid move data" });
+    if (game.gameState.winnerId)
+      return res.status(400).json({ error: "Game already concluded" });
+    if (game.gameState.board[move.row][move.col])
+      return res.status(400).json({ error: "Cell already occupied" });
+    if (game.gameState.currentPlayerId !== playerID)
+      return res.status(400).json({ error: "It's not your turn." });
 
-    for (const combination of winningCombinations) {
-      const cell = combination[0];
-      const symbol = board[cell[0]][cell[1]];
+    const player = game.gameState.players.find((p) => p.id === playerID);
+    if (!player)
+      return res.status(400).json({ error: "Player not found in this game." });
 
-      const cellTwo = combination[1];
-      const symbolTwo = board[cellTwo[0]][cellTwo[1]];
+    game.gameState.board[move.row][move.col] = player.symbol;
 
-      const cellThree = combination[2];
-      const symbolThree = board[cellThree[0]][cellThree[1]];
-
-      if (symbol === symbolTwo && symbol === symbolThree && symbol !== "") {
-        const winnerId = Object.keys(game.gameState.players).find(
-          (id) => game.gameState.players[id] === symbol
+    const winnerSymbol = checkWinner(game.gameState.board);
+    if (winnerSymbol) {
+      if (winnerSymbol === "Tie") {
+        game.gameState.winnerId = "Tie";
+      } else {
+        const winner = game.gameState.players.find(
+          (p) => p.symbol === winnerSymbol
         );
-        game.gameState.winner = winnerId;
-
-        return res.status(200).json({ winner: winnerId });
+        game.gameState.winnerId = winner ? winner.id : null;
       }
+      game.gameState.currentPlayerId = null;
+    } else {
+      const nextPlayer = game.gameState.players.find((p) => p.id !== playerID);
+      game.gameState.currentPlayerId = nextPlayer ? nextPlayer.id : null;
     }
 
-    const allCells = board.flat();
-    const isTie = allCells.every((cell) => cell !== "");
+    notifyGateway("game:state_update", game);
 
-    res.status(200).json({ winner: isTie ? "Tie" : null });
+    res.status(200).json(game);
   } catch (error) {
-    console.error("Error in checkWinner:", error);
+    console.error("Error in makeMove:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

@@ -19,13 +19,19 @@ interface GameRoomsProps {
   initialRooms: Room[];
 }
 
+interface Player {
+  id: string;
+  username: string;
+  symbol: "X" | "O";
+}
+
 interface Room {
   gameId: string;
   gameState: {
     board: string[][];
-    players: { player1ID: string; player2ID: string };
-    currentPlayer: string;
-    winner: string | null;
+    players: Player[];
+    currentPlayerId: string;
+    winnerId: string | null;
   };
 }
 
@@ -40,7 +46,6 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
     if (!socket) return;
 
     socket.on("games:updated", (updatedRooms: Room[]) => {
-      console.log("Received room update from server:", updatedRooms);
       setRooms(updatedRooms);
     });
 
@@ -53,8 +58,7 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
     if (!socket) return;
 
     try {
-      const response = await createGame(user.id);
-      console.log("Room created successfully:", response.data);
+      const response = await createGame(user.id, user.username);
       navigate(`/game/${response.data.gameId}`);
     } catch (error) {
       console.error("Error creating room:", error);
@@ -66,9 +70,8 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
     if (!socket || !selectedGameId) return;
 
     try {
-      const response = await joinGame(selectedGameId, user.id);
-      console.log("Joined room successfully:", response.data.gameId);
-      navigate(`/game/${response.data.gameId}`);
+      await joinGame(selectedGameId, user.id, user.username);
+      navigate(`/game/${selectedGameId}`);
     } catch (error) {
       console.error("Error joining room:", error);
       alert("Failed to join room. Please try again.");
@@ -89,7 +92,7 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
       <CardContent className="flex-grow space-y-4">
         {rooms.length > 0 ? (
           rooms.map((room) => {
-            const playerCount = Object.keys(room.gameState.players).length;
+            const playerCount = room.gameState.players.length;
             const isFull = playerCount >= 2;
 
             return (
@@ -107,7 +110,10 @@ export function GameRooms({ initialRooms }: GameRoomsProps) {
                 <div>
                   <p className="font-bold">Room: {room.gameId}</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{playerCount}/2 players</span>
+                    <span>
+                      Host: {room.gameState.players[0]?.username || "N/A"}
+                    </span>
+                    <span>({playerCount}/2 players)</span>
                   </div>
                 </div>
                 <Badge
