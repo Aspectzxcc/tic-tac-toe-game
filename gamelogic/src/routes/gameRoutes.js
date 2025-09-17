@@ -6,11 +6,11 @@ router.get("/", gameController.getGames);
 
 router.get("/:gameId", gameController.getGameById);
 
+router.post('/create', gameController.createGame);
+
 router.post('/:gameId/move', gameController.calculateMove);
 
 router.post('/:gameId/join', gameController.joinGame);
-
-router.post('/create', gameController.createGame);
 
 router.post('/:gameId/check', gameController.checkWinner);
 
