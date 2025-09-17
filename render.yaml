@@ -33,4 +33,4 @@ services:
     healthCheckPath: /
     envVars:
       - key: GAMELOGIC_URL
-        value: ${{ services.gamelogic-service.url }}/api/game
+        value: ${{ services.gamelogic-service.url }}
