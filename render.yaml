@@ -9,9 +9,6 @@ services:
     buildCommand: "npm install"
     startCommand: "node server.js"
     plan: free
-    envVars:
-      - key: MONGO_URI
-        fromSecretFile: /etc/secrets/mongo_uri
 
   # 2. Gamelogic Service
   - type: web
