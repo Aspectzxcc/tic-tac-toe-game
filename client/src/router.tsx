@@ -7,7 +7,7 @@ import { RegisterForm } from './features/auth/components/RegisterForm';
 import { LobbyPage } from './features/lobby/routes/LobbyPage';
 import { GamePage } from './features/game/routes/GamePage';
 import { loginLoader } from './features/auth/loaders';
-import { loginAction } from './features/auth/actions';
+import { loginAction, registerAction } from './features/auth/actions';
 
 const router = createBrowserRouter([
   {
@@ -29,7 +29,11 @@ const router = createBrowserRouter([
             loader: loginLoader,
             action: loginAction
           },
-          { path: 'register', element: <RegisterForm /> },
+          { 
+            path: 'register', 
+            element: <RegisterForm />,
+            action: registerAction
+           },
         ],
       },
       {
