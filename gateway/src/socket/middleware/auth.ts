@@ -1,13 +1,16 @@
 import { Socket } from 'socket.io';
+import jwt from 'jsonwebtoken';
 
 interface UserPayload {
   id: string;
   username: string;
+  iat: number;
+  exp: number;
 }
 
 declare module 'socket.io' {
   interface SocketData {
-    user?: UserPayload;
+    user: UserPayload;
   }
 }
 
@@ -18,16 +21,11 @@ export const auth = (socket: Socket, next: (err?: Error) => void) => {
     return next(new Error('Authentication error: No token provided.'));
   }
 
-  // --- MOCK VALIDATION ---
-  if (token === 'mock-jwt-for-testing') {
-    const generatedId = 'user-' + Math.random().toString(36).substring(2, 9);
-    
-    socket.data.user = {
-      id: generatedId,
-      username: `mockUser-${generatedId}`
-    };
-    return next();
+  try {
+    const decoded = jwt.verify(token, "secretKey") as UserPayload;
+    socket.data.user = decoded;
+    next();
+  } catch (err) {
+    return next(new Error('Authentication error: Invalid token.'));
   }
-
-  return next(new Error('Authentication error: Invalid token.'));
 };
